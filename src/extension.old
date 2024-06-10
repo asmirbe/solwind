@@ -3,10 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import snippets from "./snippets.json";
 import { Client, Databases } from "appwrite";
-
-// Appwrite setup
 const client = new Client();
-const db = new Databases(client);
+const database = new Databases(client);
 
 client.setEndpoint("https://setups.gallery/v1").setProject("666496b50037dcfde788");
 
