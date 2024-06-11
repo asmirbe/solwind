@@ -1,17 +1,17 @@
 export const baseHTML = (fileContent: string) => `<html lang="en">
 	<head>
-	  <meta charset="UTF-8" />
-	  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	  <title>Document</title>
-	  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-	  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+		<script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
 		<script>
 			tailwind.config = {
 				theme: {
 					extend: {
 						fontFamily: {
-              sans: ["Inter", "sans-serif"],
-            },
+							sans: ["Inter", "sans-serif"],
+						},
 						colors: {
 							lightGreen: {
 								50: "#EAF6F7",
@@ -47,9 +47,10 @@ export const baseHTML = (fileContent: string) => `<html lang="en">
 				},
 			};
 		</script>
-		<link rel="stylesheet" href="style.css" />
 	</head>
 	<body>
+		<!-- Body content -->
 		${fileContent}
 	</body>
-</html>`;
+</html>
+`;

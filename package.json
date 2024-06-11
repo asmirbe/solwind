@@ -23,8 +23,79 @@
 			{
 				"command": "extension.generateFromTemplate",
 				"title": "Generate from Template"
+			},
+			{
+				"command": "extension.refreshSnippets",
+				"title": "Refresh Snippets",
+				"icon": "$(refresh)"
+			},
+			{
+				"command": "extension.addSnippet",
+				"title": "Add Snippet",
+				"icon": "$(add)"
+			},
+			{
+				"command": "extension.editSnippet",
+				"icon": "$(pencil)",
+				"title": "Edit Snippet"
+			},
+			{
+				"command": "extension.deleteSnippet",
+				"icon": "$(trash)",
+				"title": "Delete Snippet"
 			}
-		]
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "extension.generateFromTemplate",
+					"group": "YourExtensionGroup@1"
+				}
+			],
+			"view/title": [
+				{
+					"command": "extension.refreshSnippets",
+					"group": "navigation",
+					"when": "view == snippets"
+				},
+				{
+					"command": "extension.addSnippet",
+					"group": "navigation",
+					"when": "view == snippets"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "extension.editSnippet",
+					"group": "inline",
+					"when": "view == snippets && viewItem == snippet"
+				},
+				{
+					"command": "extension.deleteSnippet",
+					"group": "inline",
+					"when": "view == snippets && viewItem == snippet"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "snippets",
+					"title": "Snippets",
+					"icon": "$(heart)"
+				}
+			]
+		},
+		"views": {
+			"snippets": [
+				{
+					"id": "snippets",
+					"name": "Snippets",
+					"type": "tree"
+				}
+			]
+		}
 	},
 	"main": "./out/extension.js",
 	"scripts": {
@@ -44,6 +115,7 @@
 	},
 	"dependencies": {
 		"appwrite": "^15.0.0",
-		"node-html-parser": "^6.1.13"
+		"node-html-parser": "^6.1.13",
+		"pocketbase": "^0.21.3"
 	}
 }
