@@ -49,59 +49,54 @@ class SnippetsProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 	public subcategories: any[] = [];
 
 	getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
-		return element;
+			return element;
 	}
 
 	async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
-		if (!element) {
-			// Root level: show categories
-			console.log("Fetching categories");
-			return this.categories.map((category) => {
-				return {
-					label: category.name,
-					collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-					contextValue: "category",
-					id: category.id,
-				};
-			});
-		} else if (element.contextValue === "category") {
-			// Category level: show subcategories
-			const subcategories = this.subcategories.filter((subcat) => subcat.category === element.id);
-			console.log("Fetching subcategories for category:", element.id, subcategories);
-			return subcategories.map((subcategory) => {
-				return {
-					label: subcategory.name,
-					collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-					contextValue: "subcategory",
-					id: subcategory.id,
-				};
-			});
-		} else if (element.contextValue === "subcategory") {
-			// Subcategory level: show snippets
-			const snippets = this.snippets.filter((snippet) => snippet.subcategory === element.id);
-			console.log("Fetching snippets for subcategory:", element.id, snippets);
-			return snippets.map((snippet) => {
-				return {
-					label: snippet.label,
-					description: snippet.documentation,
-					tooltip: snippet.tooltip,
-					iconPath: new vscode.ThemeIcon("symbol-snippet"),
-					collapsibleState: vscode.TreeItemCollapsibleState.None,
-					contextValue: "snippet",
-					id: snippet.id,
-				};
-			});
-		}
-		return [];
+			if (!element) {
+					// Root level: show categories
+					return this.categories.map((category) => {
+							const treeItem = new vscode.TreeItem(category.name, vscode.TreeItemCollapsibleState.Collapsed);
+							treeItem.contextValue = "category";
+							treeItem.id = category.id;
+							treeItem.iconPath = new vscode.ThemeIcon("folder");
+							return treeItem;
+					});
+			} else if (element.contextValue === "category") {
+					// Category level: show subcategories
+					const subcategories = this.subcategories.filter((subcat) => subcat.category === element.id);
+					return subcategories.map((subcategory) => {
+							const treeItem = new vscode.TreeItem(subcategory.name, vscode.TreeItemCollapsibleState.Collapsed);
+							treeItem.contextValue = "subcategory";
+							treeItem.id = subcategory.id;
+							treeItem.label = `${subcategory.name} - ${this.snippets.filter((snippet) => snippet.subcategory === subcategory.id).length}`
+							treeItem.iconPath = new vscode.ThemeIcon("folder");
+							return treeItem;
+					});
+			} else if (element.contextValue === "subcategory") {
+					// Subcategory level: show snippets
+					const snippets = this.snippets.filter((snippet) => snippet.subcategory === element.id);
+					return snippets.map((snippet) => {
+							const treeItem = new vscode.TreeItem(snippet.label, vscode.TreeItemCollapsibleState.None);
+							treeItem.contextValue = "snippet";
+							treeItem.id = snippet.id;
+							treeItem.description = snippet.documentation || "";
+							treeItem.tooltip = snippet.tooltip || "";
+							treeItem.iconPath = new vscode.ThemeIcon("symbol-snippet");
+							return treeItem;
+					});
+			}
+			return [];
 	}
 
 	refresh(): void {
-		this._onDidChangeTreeData.fire(undefined);
+			this._onDidChangeTreeData.fire(undefined);
 	}
 
 	private _onDidChangeTreeData: vscode.EventEmitter<undefined | void> = new vscode.EventEmitter<undefined | void>();
 	readonly onDidChangeTreeData: vscode.Event<undefined | void> = this._onDidChangeTreeData.event;
 }
+
 
 const snippetsProvider = new SnippetsProvider();
 vscode.window.registerTreeDataProvider("snippets", snippetsProvider);

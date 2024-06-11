@@ -26,23 +26,23 @@
 			},
 			{
 				"command": "extension.refreshSnippets",
-				"title": "Refresh Snippets",
+				"title": "Refresh",
 				"icon": "$(refresh)"
 			},
 			{
 				"command": "extension.addSnippet",
-				"title": "Add Snippet",
+				"title": "Create",
 				"icon": "$(add)"
 			},
 			{
 				"command": "extension.editSnippet",
 				"icon": "$(pencil)",
-				"title": "Edit Snippet"
+				"title": "Edit"
 			},
 			{
 				"command": "extension.deleteSnippet",
 				"icon": "$(trash)",
-				"title": "Delete Snippet"
+				"title": "Delete"
 			}
 		],
 		"menus": {
@@ -83,7 +83,7 @@
 				{
 					"id": "snippets",
 					"title": "Snippets",
-					"icon": "$(heart)"
+					"icon": "./resources/snippets.svg"
 				}
 			]
 		},
