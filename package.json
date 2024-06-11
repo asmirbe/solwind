@@ -92,6 +92,7 @@
 				{
 					"id": "snippets",
 					"name": "Snippets",
+					"icon": "$(heart)",
 					"type": "tree"
 				}
 			]
@@ -114,7 +115,6 @@
 		"typescript": "^5.4.2"
 	},
 	"dependencies": {
-		"appwrite": "^15.0.0",
 		"node-html-parser": "^6.1.13",
 		"pocketbase": "^0.21.3"
 	}
