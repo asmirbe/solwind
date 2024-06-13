@@ -2,10 +2,10 @@ import { Category, Subcategory } from './Category';
 
 export type Snippet = {
 	id: string;
+	name: string;
 	label: string;
 	documentation: string;
 	insertText: string;
-	tooltip: string;
 	category: string;
 	subcategory: string;
 }

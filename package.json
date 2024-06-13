@@ -22,6 +22,11 @@
 	"contributes": {
 		"commands": [
 			{
+				"command": "solwind.refreshSnippets",
+				"title": "Refresh",
+				"icon": "$(refresh)"
+			},
+			{
 				"command": "solwind.generateFromTemplate",
 				"title": "Generate from Template"
 			},
@@ -36,8 +41,24 @@
 				"title": "Delete"
 			},
 			{
+				"command": "solwind.renameCategory",
+				"icon": "$(pencil)",
+				"title": "Rename"
+			},
+			{
+				"command": "solwind.renameSubcategory",
+				"icon": "$(pencil)",
+				"title": "Rename"
+			},
+			{
 				"command": "solwind.addSnippetFromSelection",
 				"title": "Create Snippet from Selection"
+			}
+		],
+		"viewsWelcome": [
+			{
+				"view": "solwind.snippets",
+				"contents": "Loading..."
 			}
 		],
 		"viewsContainers": {
@@ -57,48 +78,47 @@
 				}
 			]
 		},
-		"viewsWelcome": [
-			{
-				"view": "solwind.snippets",
-				"contents": "No notes yet!\n[Create a note](command:notepad.createNote)"
-			}
-		],
 		"menus": {
+			"view/title": [
+				{
+					"command": "solwind.refreshSnippets",
+					"when": "view == solwind.snippets",
+					"group": "navigation"
+				}
+			],
 			"editor/context": [
 				{
 					"command": "solwind.addSnippetFromSelection",
 					"when": "editorTextFocus && editorHasSelection"
 				}
 			],
-			"explorer/context": [
-				{
-					"when": "explorerResourceIsFolder",
-					"command": "solwind.generateFromTemplate",
-					"group": "YourExtensionGroup@1"
-				}
-			],
 			"view/item/context": [
 				{
-					"command": "solwind.editSnippet",
-					"group": "inline",
-					"when": "view == solwind.snippets && viewItem == solwind.snippets"
+					"command": "solwind.renameCategory",
+					"when": "view == solwind.snippets && viewItem == category",
+					"group": "inline"
+				},
+				{
+					"command": "solwind.renameSubcategory",
+					"when": "view == solwind.snippets && viewItem == subcategory",
+					"group": "inline"
 				},
 				{
 					"command": "solwind.deleteSnippet",
-					"group": "inline",
-					"when": "view == solwind.snippets && viewItem == solwind.snippets"
+					"when": "view == solwind.snippets && viewItem == snippet",
+					"group": "inline"
 				}
 			]
 		}
 	},
 	"main": "./out/extension.js",
-  "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "node ./esbuild.js",
-    "package": "NODE_ENV=production node ./esbuild.js",
-    "watch": "node ./esbuild.js --watch",
-    "lint": "eslint src --ext ts"
-  },
+	"scripts": {
+		"vscode:prepublish": "npm run package",
+		"compile": "node ./esbuild.js",
+		"package": "NODE_ENV=production node ./esbuild.js",
+		"watch": "node ./esbuild.js --watch",
+		"lint": "eslint src --ext ts"
+	},
 	"devDependencies": {
 		"@types/glob": "^8.0.0",
 		"@types/node": "^18",
@@ -111,8 +131,8 @@
 		"esbuild-plugin-copy": "^2.0.1",
 		"eslint": "^8.26.0",
 		"@vscode/webview-ui-toolkit": "^1.4.0",
-    "glob": "^8.0.3",
-    "prettier": "^2.8.1"
+		"glob": "^8.0.3",
+		"prettier": "^2.8.1"
 	},
 	"dependencies": {
 		"node-html-parser": "^6.1.13",
