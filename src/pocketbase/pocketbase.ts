@@ -58,3 +58,12 @@ export async function retrieveSnippets(SnippetsDataProvider: SnippetsDataProvide
     window.showErrorMessage("Failed to fetch snippets and categories from the database.");
   }
 }
+
+export async function createSubcategory(categoryId: string, name: string) {
+  const subcategoryData = {
+    category: categoryId,
+    name: name,
+  };
+
+  await pb.collection('subcategories').create(subcategoryData);
+}

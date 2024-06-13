@@ -1,0 +1,93 @@
+@import "theme";
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+#webview-body {
+  display: flex;
+  flex-direction: column;
+}
+// mixin generate spacing class mt = margin-top, mb = margin-bottom, ml = margin-left, mr = margin-right from 0 with 0.25rem increment to 10rem
+@mixin generate-spacing-class($direction, $property) {
+  @for $i from 0 through 10 {
+    .#{$direction}-#{$i} {
+      #{$property}: #{$i * 0.5}rem;
+    }
+  }
+}
+// generate spacing class
+@include generate-spacing-class(mt, margin-top);
+@include generate-spacing-class(mb, margin-bottom);
+@include generate-spacing-class(ml, margin-left);
+@include generate-spacing-class(mr, margin-right);
+
+#snippets-form {
+  display: grid;
+  grid-auto-flow: row;
+  grid-row-gap: 1rem;
+}
+
+#submit-button,
+#delete-button {
+  width: fit-content;
+}
+
+@media screen and (min-width: 1024px) {
+  #webview-body {
+    padding: 0 8rem;
+    max-width: 1024px;
+    margin: 0 auto;
+  }
+}
+p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.3;
+}
+span.tag {
+  font-size: inherit;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: var(--input-foreground);
+  height: calc(var(--input-height) * 1px);
+  min-width: var(--input-min-width);
+  background: var(--input-background);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.inline-container {
+  display: flex;
+  gap: 1rem;
+}
+.grid--2 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.dropdown-container {
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+
+  vscode-dropdown {
+    width: 100%;
+
+    option {
+      font-size: var(--type-ramp-base-font-size);
+      line-height: var(--type-ramp-base-line-height);
+      min-height: 100%;
+      padding: 2px 6px 2px 8px;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+}

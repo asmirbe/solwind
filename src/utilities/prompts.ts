@@ -1,13 +1,15 @@
 import { window } from "vscode";
+import {capitalizeFirstLetter} from "./stringUtils";
+
 export async function promptForCategory(categories: any[]): Promise<string | undefined> {
-	const categoryNames = categories.map((category) => category.name);
+	const categoryNames = categories.map((category) => capitalizeFirstLetter(category.name));
 	return await window.showQuickPick(categoryNames, {
 		placeHolder: "Select a category",
 	});
 }
 
 export async function promptForSubcategory(subcategories: any[], categoryId: string): Promise<string | undefined> {
-	const subcategoryNames = subcategories.filter((subcat) => subcat.category === categoryId).map((subcat) => subcat.name);
+	const subcategoryNames = subcategories.filter((subcat) => subcat.category === categoryId).map((subcat) => capitalizeFirstLetter(subcat.name));
 	return await window.showQuickPick(subcategoryNames, {
 		placeHolder: "Select a subcategory",
 	});

@@ -1,8 +1,8 @@
 {
 	"name": "completions-sample",
-	"displayName": "Completion Item Provider Sample",
+	"displayName": "Solwind tailwind component completions & snippets manager",
 	"version": "0.0.2",
-	"publisher": "vscode-samples",
+	"publisher": "Asmir Belkic for Solware",
 	"private": true,
 	"license": "MIT",
 	"repository": {
@@ -17,7 +17,7 @@
 	],
 	"activationEvents": [
 		"onLanguage:html",
-		"onView:calicoColors.colorsView"
+		"onWebviewPanel:snippetDetailView"
 	],
 	"contributes": {
 		"commands": [
@@ -46,9 +46,19 @@
 				"title": "Rename"
 			},
 			{
+				"command": "solwind.addSubcategory",
+				"title": "Add Subcategory",
+				"icon": "$(add)"
+			},
+			{
 				"command": "solwind.renameSubcategory",
 				"icon": "$(pencil)",
 				"title": "Rename"
+			},
+			{
+				"command": "solwind.deleteSubcategory",
+				"icon": "$(trash)",
+				"title": "Delete"
 			},
 			{
 				"command": "solwind.addSnippetFromSelection",
@@ -65,7 +75,7 @@
 			"activitybar": [
 				{
 					"id": "snippets-container",
-					"title": "Snippets",
+					"title": "Solwind Snippets",
 					"icon": "./resources/logo.svg"
 				}
 			]
@@ -74,7 +84,7 @@
 			"snippets-container": [
 				{
 					"id": "solwind.snippets",
-					"name": "Snippets"
+					"name": "Snippets manager"
 				}
 			]
 		},
@@ -104,6 +114,16 @@
 					"group": "inline"
 				},
 				{
+					"command": "solwind.deleteSubcategory",
+					"when": "view == solwind.snippets && viewItem == subcategory",
+					"group": "inline"
+				},
+				{
+					"command": "solwind.addSubcategory",
+					"when": "view == solwind.snippets && viewItem == category",
+					"group": "inline"
+				},
+				{
 					"command": "solwind.deleteSnippet",
 					"when": "view == solwind.snippets && viewItem == snippet",
 					"group": "inline"
@@ -126,16 +146,21 @@
 		"@types/vscode-webview": "^1.57.5",
 		"@typescript-eslint/eslint-plugin": "^6.7.0",
 		"@typescript-eslint/parser": "^6.7.0",
-		"typescript": "^5.4.2",
-		"esbuild": "^0.16.10",
-		"esbuild-plugin-copy": "^2.0.1",
-		"eslint": "^8.26.0",
 		"@vscode/webview-ui-toolkit": "^1.4.0",
+		"eslint": "^8.26.0",
 		"glob": "^8.0.3",
-		"prettier": "^2.8.1"
+		"prettier": "^2.8.1",
+		"typescript": "^5.4.2"
 	},
 	"dependencies": {
+		"autoprefixer": "^10.4.19",
+		"codemirror": "^6.0.1",
+		"esbuild": "^0.21.5",
+		"esbuild-plugin-copy": "^2.1.1",
+		"esbuild-sass-plugin": "^3.3.1",
 		"node-html-parser": "^6.1.13",
-		"pocketbase": "^0.21.3"
+		"pocketbase": "^0.21.3",
+		"postcss": "^8.4.38",
+		"prism-code-editor": "^3.3.2"
 	}
 }

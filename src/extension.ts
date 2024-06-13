@@ -15,12 +15,14 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 
+import { Snippet } from "./types/Snippet";
 import { baseHTML } from "./utilities/baseHTML";
-import { fetchMatchingSnippets, retrieveSnippets, pb } from "./pocketbase/pocketbase";
+import { fetchMatchingSnippets, retrieveSnippets, pb, createSubcategory } from "./pocketbase/pocketbase";
 import { SnippetsDataProvider } from "./providers/SnippetsDataProvider";
 import { promptForCategory, promptForSubcategory } from "./utilities/prompts";
 import { getWebviewContent } from "./ui/getWebviewContent";
 import { renamePrompt } from "./utilities/prompts";
+import { formatLabel } from "./utilities/stringUtils";
 
 export async function activate(context: ExtensionContext) {
   const snippetsDataProvider = new SnippetsDataProvider();
@@ -34,61 +36,63 @@ export async function activate(context: ExtensionContext) {
 
   // Command to render a webview-based note view
   const openSnippet = commands.registerCommand("solwind.showSnippetDetailView", () => {
-    const selectedTreeViewItem = treeView.selection[0];
-    const matchingSnippet = snippetsDataProvider.snippets.find(
-      (x) => x.id === selectedTreeViewItem.id
-    );
+		const selectedTreeViewItem = treeView.selection[0];
+		const matchingSnippet = snippetsDataProvider.snippets.find(
+			(x) => x.id === selectedTreeViewItem.id
+		);
 
-    if (!matchingSnippet) {
-      window.showErrorMessage("No matching note found");
-      return;
-    }
+		if (!matchingSnippet) {
+			window.showErrorMessage("No matching note found");
+			return;
+		}
 
-    // If no panel is open, create a new one and update the HTML
-    if (!panel) {
-      panel = window.createWebviewPanel(
-        "snippetDetailView",
-        matchingSnippet.name,
-        ViewColumn.One,
-        {
-          // Enable JavaScript in the webview
-          enableScripts: true,
-          // Restrict the webview to only load resources from the `out` directory
-          localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
-        }
-      );
-    }
+		// If no panel is open, create a new one and update the HTML
+		if (!panel) {
+			panel = window.createWebviewPanel(
+				"snippetDetailView",
+				matchingSnippet.name,
+				ViewColumn.One,
+				{
+					// Enable JavaScript in the webview
+					enableScripts: true,
+					// Restrict the webview to only load resources from the `out` directory
+					localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
+				}
+			);
+		}
 
-    // If a panel is open, update the HTML with the selected item's content
-    panel.title = matchingSnippet.name;
-    panel.resourceUri = Uri.file(`${matchingSnippet.name}.html`);
-    panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, matchingSnippet, snippetsDataProvider.categories, snippetsDataProvider.subcategories);
+		// If a panel is open, update the HTML with the selected item's content
+		panel.title = matchingSnippet.name;
+		panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
+		panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, matchingSnippet, snippetsDataProvider.categories, snippetsDataProvider.subcategories);
 
-    // If a panel is open and receives an update message, update the notes array and the panel title/html
-    panel.webview.onDidReceiveMessage((message: any) => {
-      const command = message.command;
-      const snippet = message.snippet;
-      switch (command) {
-        case "updateSnippet":
-          console.log("updateSnippet", snippet);
+		// If a panel is open and receives an update message, update the notes array and the panel title/html
+		panel.webview.onDidReceiveMessage((message: any) => {
+			const command = message.command;
+			const snippet = message.snippet;
 
-          if (panel) {
-            panel.title = snippet.title;
-            panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, snippet, snippetsDataProvider.categories, snippetsDataProvider.subcategories);
-          }
-          break;
-      }
-    });
+			switch (command) {
+				case "updateSnippet":
+					pb.collection("snippets").update(snippet.id, snippet);
+					snippetsDataProvider.refresh();
+					if (panel) {
+						panel.title = snippet.name;
+						panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, snippet, snippetsDataProvider.categories, snippetsDataProvider.subcategories);
+					}
+					break;
+			}
+		});
 
-    panel.onDidDispose(
-      () => {
-        // When the panel is closed, cancel any future updates to the webview content
-        panel = undefined;
-      },
-      null,
-      context.subscriptions
-    );
-  });
+		panel.onDidDispose(
+			() => {
+				// When the panel is closed, cancel any future updates to the webview content
+				panel = undefined;
+			},
+			null,
+			context.subscriptions
+		);
+	});
+
 
   // Command to add snippet from selection
   const insertSnippet = commands.registerCommand("solwind.addSnippetFromSelection", async () => {
@@ -121,7 +125,7 @@ export async function activate(context: ExtensionContext) {
       }
 
       const selectedCategory = categories.find(
-        (category) => category.name === selectedCategoryName
+        (category) => category.name === selectedCategoryName?.toLowerCase()
       );
 
       const selectedSubcategoryName = await promptForSubcategory(
@@ -130,21 +134,22 @@ export async function activate(context: ExtensionContext) {
       );
 
       const selectedSubcategory = subcategories.find(
-        (subcat) => subcat.name === selectedSubcategoryName
+        (subcat) => subcat.name === selectedSubcategoryName?.toLowerCase()
       );
 
       const snippetName = await window.showInputBox({ prompt: "Enter snippet name" });
-      const snippetLabel = await window.showInputBox({ prompt: "Enter snippet label" });
+      let snippetLabel = await window.showInputBox({ prompt: "Enter snippet label" });
 
       if (!snippetLabel) {
         window.showErrorMessage("Snippet label is required.");
         return;
       }
 
+			snippetLabel = formatLabel(snippetLabel);
       const snippetData: any = {
         name: snippetName,
         label: snippetLabel,
-        documentation: snippetLabel || "",
+        documentation: "",
         insertText: selectedText,
         category: selectedCategory.id,
       };
@@ -228,6 +233,21 @@ export async function activate(context: ExtensionContext) {
     }
   });
 
+	// Delete subcategory command
+	const deleteSubcategory = commands.registerCommand("solwind.deleteSubcategory", async (item: TreeItem) => {
+		try {
+			const deleteSubcategory = await window.showInformationMessage(`Do you want to delete "${item.label}"?`, "Yes", "No");
+			if (deleteSubcategory === "No") return;
+			await pb.collection("subcategories").delete(item.id!);
+			window.showInformationMessage(`Successfully deleted!`);
+			await snippetsDataProvider.refresh();
+		} catch (error) {
+			console.error("Error deleting subcategory:", error);
+			window.showErrorMessage("Failed to delete subcategory.");
+		}
+	});
+
+	// Register a completion provider for HTML files
   const completionProvider = languages.registerCompletionItemProvider("html", {
     provideCompletionItems: async function (
       document: TextDocument,
@@ -256,6 +276,7 @@ export async function activate(context: ExtensionContext) {
     },
   });
 
+	// Generate template command
   const generateTemplate = commands.registerCommand(
     "extension.generateFromTemplate",
     async (folderUri: Uri) => {
@@ -319,16 +340,50 @@ export async function activate(context: ExtensionContext) {
     }
   );
 
+	// Refresh snippets command
   const refreshSnippets = commands.registerCommand("solwind.refreshSnippets", async () => {
     await snippetsDataProvider.refresh();
   });
 
+	const addSubcategory = commands.registerCommand("solwind.addSubcategory", async (category) => {
+    const subcategoryName = await window.showInputBox({
+      placeHolder: "Enter the subcategory name",
+      prompt: "New Subcategory Name",
+      validateInput: (text) => {
+        return text.trim().length === 0 ? "Subcategory name cannot be empty" : null;
+      }
+    });
+
+    if (!subcategoryName) {
+      window.showErrorMessage("Subcategory name is required");
+      return;
+    }
+
+    try {
+      await createSubcategory(category.id, subcategoryName);
+      window.showInformationMessage(`Subcategory '${subcategoryName}' added successfully`);
+      snippetsDataProvider.refresh();
+    } catch (error: any) {
+      window.showErrorMessage(`Failed to add subcategory: ${error.message}`);
+    }
+  });
+
+
+	// Snippets commands
   context.subscriptions.push(refreshSnippets);
-  context.subscriptions.push(renameSubcategory);
-  context.subscriptions.push(renameCategory);
   context.subscriptions.push(openSnippet);
   context.subscriptions.push(insertSnippet);
   context.subscriptions.push(deleteSnippet);
+
+	// Subcategory commands
+  context.subscriptions.push(renameSubcategory);
+	context.subscriptions.push(deleteSubcategory);
+	context.subscriptions.push(addSubcategory);
+
+	// Category commands
+  context.subscriptions.push(renameCategory);
+
+	// Misc
   context.subscriptions.push(completionProvider);
   context.subscriptions.push(generateTemplate);
 }

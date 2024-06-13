@@ -22,79 +22,90 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
   }
 
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
-		if (!element) {
-			// Root level: show categories
-			return this.categories.map((category) => {
-				const snippetsCount = this.snippets.filter(
-					(snippet) => snippet.category === category.id
-				).length;
-				const treeItem = new TreeItem(capitalizeFirstLetter(category.name), TreeItemCollapsibleState.Collapsed);
-				treeItem.contextValue = "category";
-				treeItem.id = category.id;
-				treeItem.description = `${snippetsCount} items`;
-				treeItem.iconPath = new ThemeIcon("folder-opened");
-				return treeItem;
-			});
-		}
+    if (!element) {
+      // Root level: show categories
+      return this.categories.map((category) => {
+        const snippetsCount = this.snippets.filter(
+          (snippet) => snippet.category === category.id
+        ).length;
+        const treeItem = new TreeItem(
+          capitalizeFirstLetter(category.name),
+          TreeItemCollapsibleState.Collapsed
+        );
+        treeItem.contextValue = "category";
+        treeItem.id = category.id;
+        treeItem.description = `${snippetsCount} items`;
+        treeItem.iconPath = new ThemeIcon("folder-opened");
+        return treeItem;
+      });
+    }
 
-		switch (element.contextValue) {
-			case "category":
-				// Category level: show subcategories and direct snippets
-				const subcategories = this.subcategories.filter((subcat) => subcat.category === element.id);
-				const subcategoryItems = subcategories.map((subcategory) => {
-					const snippetsCount = this.snippets.filter(
-						(snippet) => snippet.subcategory === subcategory.id
-					).length;
-					const treeItem = new TreeItem(capitalizeFirstLetter(subcategory.name), TreeItemCollapsibleState.Collapsed);
-					treeItem.contextValue = "subcategory";
-					treeItem.id = subcategory.id;
-					treeItem.description = `${snippetsCount} items`;
-					treeItem.iconPath = new ThemeIcon("folder-opened");
-					return treeItem;
-				});
+    switch (element.contextValue) {
+      case "category": {
+        // Category level: show subcategories and direct snippets
+        const subcategories = this.subcategories.filter((subcat) => subcat.category === element.id);
+        const subcategoryItems = subcategories.map((subcategory) => {
+          const snippetsCount = this.snippets.filter(
+            (snippet) => snippet.subcategory === subcategory.id
+          ).length;
+          const treeItem = new TreeItem(
+            capitalizeFirstLetter(subcategory.name),
+            TreeItemCollapsibleState.Collapsed
+          );
+          treeItem.contextValue = "subcategory";
+          treeItem.id = subcategory.id;
+          treeItem.description = `${snippetsCount} items`;
+          treeItem.iconPath = new ThemeIcon("folder-opened");
+          return treeItem;
+        });
 
-				// Snippets directly under this category
-				const directSnippets = this.snippets.filter(
-					(snippet) => snippet.category === element.id && !snippet.subcategory
-				);
-				const snippetItems = directSnippets.map((snippet) => {
-					const treeItem = new TreeItem(capitalizeFirstLetter(snippet.name), TreeItemCollapsibleState.None);
-					treeItem.contextValue = "snippet";
-					treeItem.id = snippet.id;
-					treeItem.description = snippet.label || "";
-					treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
-					treeItem.command = {
-						title: "Open snippet",
-						command: "solwind.showSnippetDetailView",
-						arguments: [snippet], // Pass the snippet as an argument to the command
-					};
-					return treeItem;
-				});
+        // Snippets directly under this category
+        const directSnippets = this.snippets.filter(
+          (snippet) => snippet.category === element.id && !snippet.subcategory
+        );
+        const snippetItems = directSnippets.map((snippet) => {
+          const treeItem = new TreeItem(
+            capitalizeFirstLetter(snippet.name),
+            TreeItemCollapsibleState.None
+          );
+          treeItem.contextValue = "snippet";
+          treeItem.id = snippet.id;
+          treeItem.description = snippet.label || "";
+          treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
+          treeItem.command = {
+            title: "Open snippet",
+            command: "solwind.showSnippetDetailView",
+            arguments: [snippet], // Pass the snippet as an argument to the command
+          };
+          return treeItem;
+        });
 
-				return [...subcategoryItems, ...snippetItems];
-
-			case "subcategory":
-				// Subcategory level: show snippets
-				const snippets = this.snippets.filter((snippet) => snippet.subcategory === element.id);
-				return snippets.map((snippet) => {
-					const treeItem = new TreeItem(capitalizeFirstLetter(snippet.name), TreeItemCollapsibleState.None);
-					treeItem.contextValue = "snippet";
-					treeItem.id = snippet.id;
-					treeItem.description = snippet.label || "";
-					treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
-					treeItem.command = {
-						title: "Open snippet",
-						command: "solwind.showSnippetDetailView",
-						arguments: [snippet], // Pass the snippet as an argument to the command
-					};
-					return treeItem;
-				});
-
-			default:
-				return [];
-		}
-	}
-
+        return [...subcategoryItems, ...snippetItems];
+      }
+      case "subcategory": {
+        // Subcategory level: show snippets
+        const snippets = this.snippets.filter((snippet) => snippet.subcategory === element.id);
+        return snippets.map((snippet) => {
+          const treeItem = new TreeItem(
+            capitalizeFirstLetter(snippet.name),
+            TreeItemCollapsibleState.None
+          );
+          treeItem.contextValue = "snippet";
+          treeItem.id = snippet.id;
+          treeItem.description = snippet.label || "";
+          treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
+          treeItem.command = {
+            title: "Open snippet",
+            command: "solwind.showSnippetDetailView",
+            arguments: [snippet], // Pass the snippet as an argument to the command
+          };
+          return treeItem;
+        });
+      }
+      default:
+        return [];
+    }
+  }
 
   async refresh(): Promise<void> {
     await retrieveSnippets(this); // Fetch latest data and update the tree view
