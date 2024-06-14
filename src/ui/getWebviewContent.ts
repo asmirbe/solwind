@@ -39,7 +39,7 @@ export function getWebviewContent(webview: Webview, extensionUri: Uri, snippet: 
       </head>
       <body id="webview-body">
         <header>
-          <h1>Editing : ${snippet.name}</h1>
+          <h1>Editing ${snippet.name}</h1>
         </header>
         <section id="snippets-form">
           <vscode-text-field id="name" value="${snippet.name}" placeholder="Enter a name">Name</vscode-text-field>
@@ -47,7 +47,7 @@ export function getWebviewContent(webview: Webview, extensionUri: Uri, snippet: 
 						<vscode-text-field id="label" value="${snippet.label}" placeholder="Enter a label">Label</vscode-text-field>
 						<p><small>The label is the trigger : <span class="tag">${snippet.label}</span> this will run the completion.</small></p>
 					</div>
-          <vscode-text-area id="documentation" value="${snippet.documentation}" placeholder="Write your documentation here" resize="none" rows=2>Documentation</vscode-text-area>
+          <vscode-text-area id="documentation" value="${snippet.description}" placeholder="Write your documentation here" resize="none" rows=2>Documentation</vscode-text-area>
           <vscode-text-area id="insertText" readonly value="${safeInsertText}" placeholder="Provide your code here" resize="none" rows=10>Snippet code</vscode-text-area>
 					<div class="grid--2">
 						<div class="dropdown-container">
@@ -59,7 +59,7 @@ export function getWebviewContent(webview: Webview, extensionUri: Uri, snippet: 
 							<vscode-dropdown id="subcategory" position="below"></vscode-dropdown>
 						</div>
 					</div>
-          <div class="inline-container mt-2">
+          <div class="inline-container">
 					<vscode-button id="submit-button">Save</vscode-button>
           <vscode-button id="delete-button" appearance="secondary">Delete</vscode-button>
 					</div>

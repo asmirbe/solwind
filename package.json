@@ -28,11 +28,11 @@
 			},
 			{
 				"command": "solwind.generateFromTemplate",
-				"title": "Generate from Template"
+				"title": "Generate a template"
 			},
 			{
 				"command": "solwind.editSnippet",
-				"icon": "$(pencil)",
+				"icon": "$(whole-word)",
 				"title": "Edit"
 			},
 			{
@@ -42,7 +42,7 @@
 			},
 			{
 				"command": "solwind.renameCategory",
-				"icon": "$(pencil)",
+				"icon": "$(whole-word)",
 				"title": "Rename"
 			},
 			{
@@ -52,7 +52,7 @@
 			},
 			{
 				"command": "solwind.renameSubcategory",
-				"icon": "$(pencil)",
+				"icon": "$(whole-word)",
 				"title": "Rename"
 			},
 			{
@@ -62,20 +62,35 @@
 			},
 			{
 				"command": "solwind.addSnippetFromSelection",
-				"title": "Create Snippet from Selection"
+				"title": "Add to solwind"
+			},
+			{
+				"command": "solwind.addCategory",
+				"title": "Add Category",
+				"icon": "$(add)"
+			},
+			{
+				"command": "solwind.deleteCategory",
+				"icon": "$(trash)",
+				"title": "Delete"
+			},
+			{
+				"command": "solwind.setApiKey",
+				"title": "Set API Key",
+				"icon": "$(key)"
 			}
 		],
 		"viewsWelcome": [
 			{
 				"view": "solwind.snippets",
-				"contents": "Loading..."
+				"contents": "You can have paragraphs of text here. You can have [links](https://code.visualstudio.com) to external sources or [internal commands](command:solwind.setApiKey).\nUse new lines to have new paragraphs.\nPlace a link alone in a paragraph to make it a button\n[Hello](command:solwind.setApiKey)"
 			}
 		],
 		"viewsContainers": {
 			"activitybar": [
 				{
 					"id": "snippets-container",
-					"title": "Solwind Snippets",
+					"title": "Solwind",
 					"icon": "./resources/logo.svg"
 				}
 			]
@@ -84,7 +99,7 @@
 			"snippets-container": [
 				{
 					"id": "solwind.snippets",
-					"name": "Snippets manager"
+					"name": "Welcome"
 				}
 			]
 		},
@@ -92,6 +107,11 @@
 			"view/title": [
 				{
 					"command": "solwind.refreshSnippets",
+					"when": "view == solwind.snippets",
+					"group": "navigation"
+				},
+				{
+					"command": "solwind.addCategory",
 					"when": "view == solwind.snippets",
 					"group": "navigation"
 				}
@@ -102,7 +122,18 @@
 					"when": "editorTextFocus && editorHasSelection"
 				}
 			],
+			"explorer/context": [
+				{
+					"command": "solwind.generateFromTemplate",
+					"when": "explorerResourceIsFolder && explorerViewletVisible && !explorerResourceReadonly"
+				}
+			],
 			"view/item/context": [
+				{
+					"command": "solwind.deleteCategory",
+					"when": "view == solwind.snippets && viewItem == category",
+					"group": "inline"
+				},
 				{
 					"command": "solwind.renameCategory",
 					"when": "view == solwind.snippets && viewItem == category",

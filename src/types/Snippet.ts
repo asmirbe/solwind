@@ -4,7 +4,7 @@ export type Snippet = {
 	id: string;
 	name: string;
 	label: string;
-	documentation: string;
+	description: string;
 	insertText: string;
 	category: string;
 	subcategory: string;

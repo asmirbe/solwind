@@ -1,30 +1,28 @@
-import {
-  commands,
-  ExtensionContext,
-  window,
-  ViewColumn,
-  Uri,
-  TreeItem,
-  languages,
-  TextDocument,
-  Position,
-  CompletionList,
-  CompletionItemKind,
-  SnippetString,
-} from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 
-import { Snippet } from "./types/Snippet";
 import { baseHTML } from "./utilities/baseHTML";
-import { fetchMatchingSnippets, retrieveSnippets, pb, createSubcategory } from "./pocketbase/pocketbase";
+
+import { commands, ExtensionContext, window, ViewColumn, Uri, TreeItem } from "vscode";
 import { SnippetsDataProvider } from "./providers/SnippetsDataProvider";
-import { promptForCategory, promptForSubcategory } from "./utilities/prompts";
+import { retrieveSnippets, pb, createSubcategory } from "./pocketbase/pocketbase";
 import { getWebviewContent } from "./ui/getWebviewContent";
-import { renamePrompt } from "./utilities/prompts";
-import { formatLabel } from "./utilities/stringUtils";
+import { promptForCategory, promptForSubcategory, renamePrompt } from "./utilities/prompts";
+import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
+import { askForApiKey } from "./utilities/apiKey";
 
 export async function activate(context: ExtensionContext) {
+  context.globalState.update("solwind.apiKey", undefined);
+  const apiKey = context.globalState.get<string>("solwind.apiKey");
+	console.log(apiKey);
+
+  if (!apiKey || apiKey === undefined || apiKey === "") askForApiKey(context);
+
+  initializeSnippets(context);
+}
+
+function initializeSnippets(context: ExtensionContext) {
+	if(!context.globalState.get("solwind.apiKey")) return;
   const snippetsDataProvider = new SnippetsDataProvider();
   let panel: any | undefined = undefined;
 
@@ -32,69 +30,67 @@ export async function activate(context: ExtensionContext) {
     treeDataProvider: snippetsDataProvider,
     showCollapseAll: false,
   });
-  await retrieveSnippets(snippetsDataProvider);
 
-  // Command to render a webview-based note view
+  retrieveSnippets(snippetsDataProvider);
+
   const openSnippet = commands.registerCommand("solwind.showSnippetDetailView", () => {
-		const selectedTreeViewItem = treeView.selection[0];
-		const matchingSnippet = snippetsDataProvider.snippets.find(
-			(x) => x.id === selectedTreeViewItem.id
-		);
+    const selectedTreeViewItem = treeView.selection[0];
+    const matchingSnippet = snippetsDataProvider.snippets.find(
+      (x) => x.id === selectedTreeViewItem.id
+    );
 
-		if (!matchingSnippet) {
-			window.showErrorMessage("No matching note found");
-			return;
-		}
+    if (!matchingSnippet) {
+      window.showErrorMessage("No matching snippet found");
+      return;
+    }
 
-		// If no panel is open, create a new one and update the HTML
-		if (!panel) {
-			panel = window.createWebviewPanel(
-				"snippetDetailView",
-				matchingSnippet.name,
-				ViewColumn.One,
-				{
-					// Enable JavaScript in the webview
-					enableScripts: true,
-					// Restrict the webview to only load resources from the `out` directory
-					localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
-				}
-			);
-		}
+    if (!panel) {
+      panel = window.createWebviewPanel("snippetDetailView", matchingSnippet.name, ViewColumn.One, {
+        enableScripts: true,
+        localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
+      });
+    }
 
-		// If a panel is open, update the HTML with the selected item's content
-		panel.title = matchingSnippet.name;
-		panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
-		panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, matchingSnippet, snippetsDataProvider.categories, snippetsDataProvider.subcategories);
+    panel.title = matchingSnippet.name;
+    panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
+    panel.webview.html = getWebviewContent(
+      panel.webview,
+      context.extensionUri,
+      matchingSnippet,
+      snippetsDataProvider.categories,
+      snippetsDataProvider.subcategories
+    );
 
-		// If a panel is open and receives an update message, update the notes array and the panel title/html
-		panel.webview.onDidReceiveMessage((message: any) => {
-			const command = message.command;
-			const snippet = message.snippet;
+    panel.webview.onDidReceiveMessage((message: any) => {
+      const command = message.command;
+      const snippet = message.snippet;
 
-			switch (command) {
-				case "updateSnippet":
-					pb.collection("snippets").update(snippet.id, snippet);
-					snippetsDataProvider.refresh();
-					if (panel) {
-						panel.title = snippet.name;
-						panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, snippet, snippetsDataProvider.categories, snippetsDataProvider.subcategories);
-					}
-					break;
-			}
-		});
+      switch (command) {
+        case "updateSnippet":
+          pb.collection("snippets").update(snippet.id, snippet);
+          snippetsDataProvider.refresh();
+          if (panel) {
+            panel.title = snippet.name;
+            panel.webview.html = getWebviewContent(
+              panel.webview,
+              context.extensionUri,
+              snippet,
+              snippetsDataProvider.categories,
+              snippetsDataProvider.subcategories
+            );
+          }
+          break;
+        case "cancel":
+          panel.dispose();
+          break;
+      }
+    });
 
-		panel.onDidDispose(
-			() => {
-				// When the panel is closed, cancel any future updates to the webview content
-				panel = undefined;
-			},
-			null,
-			context.subscriptions
-		);
-	});
+    panel.onDidDispose(() => {
+      panel = undefined;
+    });
+  });
 
-
-  // Command to add snippet from selection
   const insertSnippet = commands.registerCommand("solwind.addSnippetFromSelection", async () => {
     const editor = window.activeTextEditor;
     if (!editor) {
@@ -105,7 +101,7 @@ export async function activate(context: ExtensionContext) {
     const selection = editor.selection;
     const selectedText = editor.document.getText(selection);
     if (!selectedText) {
-      window.showErrorMessage("No text selected.");
+      window.showErrorMessage("No code selected.");
       return;
     }
 
@@ -125,7 +121,7 @@ export async function activate(context: ExtensionContext) {
       }
 
       const selectedCategory = categories.find(
-        (category) => category.name === selectedCategoryName?.toLowerCase()
+        (category) => category.name === selectedCategoryName
       );
 
       const selectedSubcategoryName = await promptForSubcategory(
@@ -133,9 +129,19 @@ export async function activate(context: ExtensionContext) {
         selectedCategory.id
       );
 
+      if (!selectedSubcategoryName) {
+        window.showErrorMessage("Subcategory selection is required.");
+        return;
+      }
+
       const selectedSubcategory = subcategories.find(
-        (subcat) => subcat.name === selectedSubcategoryName?.toLowerCase()
+        (subcat) => subcat.name === selectedSubcategoryName
       );
+
+      if (!selectedSubcategory) {
+        window.showErrorMessage("Selected subcategory not found.");
+        return;
+      }
 
       const snippetName = await window.showInputBox({ prompt: "Enter snippet name" });
       let snippetLabel = await window.showInputBox({ prompt: "Enter snippet label" });
@@ -145,18 +151,16 @@ export async function activate(context: ExtensionContext) {
         return;
       }
 
-			snippetLabel = formatLabel(snippetLabel);
+      snippetLabel = formatLabel(snippetLabel);
       const snippetData: any = {
         name: snippetName,
         label: snippetLabel,
-        documentation: "",
         insertText: selectedText,
         category: selectedCategory.id,
+        subcategory: selectedSubcategory.id,
       };
 
-      if (selectedSubcategory) {
-        snippetData.subcategory = selectedSubcategory.id;
-      }
+      console.log(snippetData);
 
       await pb.collection("snippets").create(snippetData);
 
@@ -168,117 +172,30 @@ export async function activate(context: ExtensionContext) {
     }
   });
 
-  // Delete snippet command
-  const deleteSnippet = commands.registerCommand("solwind.deleteSnippet", async (item: TreeItem) => {
-    try {
-      const deleteSnippet = await window.showInformationMessage(`Do you want to delete "${item.label}"?`, "Yes", "No");
-      if (deleteSnippet === "No") return;
-      await pb.collection("snippets").delete(item.id!);
-      window.showInformationMessage(`Successfully deleted!`);
-      await snippetsDataProvider.refresh();
-
-      // Close the panel if it's open
-      panel?.dispose();
-    } catch (error) {
-      console.error("Error deleting snippet:", error);
-      window.showErrorMessage("Failed to delete snippet.");
-    }
-  });
-
-  // Rename category command
-  const renameCategory = commands.registerCommand("solwind.renameCategory", async (item: TreeItem) => {
-    let currentLabel: string;
-    if (typeof item.label === 'string') {
-      currentLabel = item.label;
-    } else if (item.label && typeof item.label.label === 'string') {
-      currentLabel = item.label.label;
-    } else {
-      currentLabel = 'default-label';
-    }
-
-    const newName = await renamePrompt({ message: "Enter new category name", value: currentLabel });
-    if (!newName) return;
-
-    try {
-      await pb.collection("categories").update(item.id!, { name: newName });
-      window.showInformationMessage(`Category "${currentLabel}" renamed to "${newName}"`);
-      await snippetsDataProvider.refresh();
-    } catch (error) {
-      console.error("Error renaming category:", error);
-      window.showErrorMessage("Failed to rename category.");
-    }
-  });
-
-  // Rename subcategory command
-  const renameSubcategory = commands.registerCommand("solwind.renameSubcategory", async (item: TreeItem) => {
-    let currentLabel: string;
-    if (typeof item.label === 'string') {
-      currentLabel = item.label;
-    } else if (item.label && typeof item.label.label === 'string') {
-      currentLabel = item.label.label;
-    } else {
-      currentLabel = 'default-label';
-    }
-
-    const newName = await renamePrompt({ message: "Enter new subcategory name", value: currentLabel });
-    if (!newName) return;
-
-    try {
-      await pb.collection("subcategories").update(item.id!, { name: newName });
-      window.showInformationMessage(`Subcategory "${currentLabel}" renamed to "${newName}"`);
-      await snippetsDataProvider.refresh();
-    } catch (error) {
-      console.error("Error renaming subcategory:", error);
-      window.showErrorMessage("Failed to rename subcategory.");
-    }
-  });
-
-	// Delete subcategory command
-	const deleteSubcategory = commands.registerCommand("solwind.deleteSubcategory", async (item: TreeItem) => {
-		try {
-			const deleteSubcategory = await window.showInformationMessage(`Do you want to delete "${item.label}"?`, "Yes", "No");
-			if (deleteSubcategory === "No") return;
-			await pb.collection("subcategories").delete(item.id!);
-			window.showInformationMessage(`Successfully deleted!`);
-			await snippetsDataProvider.refresh();
-		} catch (error) {
-			console.error("Error deleting subcategory:", error);
-			window.showErrorMessage("Failed to delete subcategory.");
-		}
-	});
-
-	// Register a completion provider for HTML files
-  const completionProvider = languages.registerCompletionItemProvider("html", {
-    provideCompletionItems: async function (
-      document: TextDocument,
-      position: Position
-    ): Promise<any> {
-      const activeEditor = window.activeTextEditor;
-      if (!activeEditor) return new CompletionList([], true);
-      const { text } = activeEditor.document.lineAt(activeEditor.selection.active.line);
-
+  const deleteSnippet = commands.registerCommand(
+    "solwind.deleteSnippet",
+    async (item: TreeItem) => {
       try {
-        const matchingSnippets = (await fetchMatchingSnippets(text.trim())) as any[];
+        const deleteSnippet = await window.showInformationMessage(
+          `Do you want to delete "${item.label}"?`,
+          "Yes",
+          "No"
+        );
+        if (deleteSnippet === "No" || !deleteSnippet || deleteSnippet === undefined) return;
+        await pb.collection("snippets").delete(item.id!);
+        window.showInformationMessage(`Successfully deleted!`);
+        await snippetsDataProvider.refresh();
 
-        const completionItems = matchingSnippets.map((snippet: any) => {
-          return {
-            label: snippet.label,
-            kind: CompletionItemKind.Snippet,
-            documentation: snippet.documentation,
-            insertText: new SnippetString(snippet.insertText),
-          };
-        });
-        return new CompletionList(completionItems, true);
+        panel?.dispose();
       } catch (error) {
-        console.error("Error retrieving snippets:", error);
-        return new CompletionList([], true);
+        console.error("Error deleting snippet:", error);
+        window.showErrorMessage("Failed to delete snippet.");
       }
-    },
-  });
+    }
+  );
 
-	// Generate template command
   const generateTemplate = commands.registerCommand(
-    "extension.generateFromTemplate",
+    "solwind.generateFromTemplate",
     async (folderUri: Uri) => {
       try {
         const response = await pb.collection("templates").getFullList({
@@ -302,28 +219,24 @@ export async function activate(context: ExtensionContext) {
 
               const filePath = path.join(folderUri.fsPath, "index.html");
 
-              // Check if the file already exists
               const fileExists = await fs.promises
                 .access(filePath, fs.constants.F_OK)
                 .then(() => true)
                 .catch(() => false);
 
               if (fileExists) {
-                // Prompt the user for confirmation to overwrite the file
                 const overwrite = await window.showInformationMessage(
-                  "The file already exists do you want to overwrite it?",
+                  "The file already exists. Do you want to overwrite it?",
                   "Yes",
                   "No"
                 );
-                if (overwrite === "No") return;
-                // User confirmed to overwrite the file
+                if (overwrite === "No" || !overwrite || overwrite === undefined) return;
                 await fs.promises.writeFile(filePath, baseHTML(fileContent), {
                   encoding: "utf8",
                   flag: "w",
                 });
                 window.showInformationMessage(`Template '${fileName}' generated successfully!`);
               } else {
-                // File doesn't exist, create it
                 await fs.promises.writeFile(filePath, baseHTML(fileContent), {
                   encoding: "utf8",
                   flag: "w",
@@ -340,50 +253,170 @@ export async function activate(context: ExtensionContext) {
     }
   );
 
-	// Refresh snippets command
   const refreshSnippets = commands.registerCommand("solwind.refreshSnippets", async () => {
     await snippetsDataProvider.refresh();
   });
 
-	const addSubcategory = commands.registerCommand("solwind.addSubcategory", async (category) => {
+  const addSubcategory = commands.registerCommand("solwind.addSubcategory", async (category) => {
     const subcategoryName = await window.showInputBox({
       placeHolder: "Enter the subcategory name",
       prompt: "New Subcategory Name",
       validateInput: (text) => {
         return text.trim().length === 0 ? "Subcategory name cannot be empty" : null;
-      }
+      },
     });
 
-    if (!subcategoryName) {
-      window.showErrorMessage("Subcategory name is required");
-      return;
-    }
+    if (!subcategoryName) return;
 
     try {
-      await createSubcategory(category.id, subcategoryName);
-      window.showInformationMessage(`Subcategory '${subcategoryName}' added successfully`);
+      const capitalizedSubcategoryName = capitalizeFirstLetter(subcategoryName);
+      await createSubcategory(category.id, capitalizedSubcategoryName);
+      window.showInformationMessage(
+        `Subcategory '${capitalizedSubcategoryName}' added successfully`
+      );
       snippetsDataProvider.refresh();
     } catch (error: any) {
       window.showErrorMessage(`Failed to add subcategory: ${error.message}`);
     }
   });
 
+  const deleteSubcategory = commands.registerCommand(
+    "solwind.deleteSubcategory",
+    async (item: TreeItem) => {
+      try {
+        const deleteSubcategory = await window.showInformationMessage(
+          `Do you want to delete "${item.label}"?`,
+          "Yes",
+          "No"
+        );
+        if (deleteSubcategory === "No" || !deleteSubcategory || deleteSubcategory === undefined)
+          return;
+        await pb.collection("subcategories").delete(item.id!);
+        window.showInformationMessage(`Successfully deleted!`);
+        await snippetsDataProvider.refresh();
+      } catch (error) {
+        console.error("Error deleting subcategory:", error);
+        window.showErrorMessage("Failed to delete subcategory.");
+      }
+    }
+  );
 
-	// Snippets commands
-  context.subscriptions.push(refreshSnippets);
-  context.subscriptions.push(openSnippet);
-  context.subscriptions.push(insertSnippet);
-  context.subscriptions.push(deleteSnippet);
+  const renameSubcategory = commands.registerCommand(
+    "solwind.renameSubcategory",
+    async (item: TreeItem) => {
+      let currentLabel: string;
+      if (typeof item.label === "string") {
+        currentLabel = item.label;
+      } else if (item.label && typeof item.label.label === "string") {
+        currentLabel = item.label.label;
+      } else {
+        currentLabel = "default-label";
+      }
 
-	// Subcategory commands
-  context.subscriptions.push(renameSubcategory);
-	context.subscriptions.push(deleteSubcategory);
-	context.subscriptions.push(addSubcategory);
+      const newName = await renamePrompt({
+        message: "Enter new subcategory name",
+        value: currentLabel,
+      });
+      if (!newName) return;
 
-	// Category commands
-  context.subscriptions.push(renameCategory);
+      try {
+        const capitalizedNewName = capitalizeFirstLetter(newName);
+        await pb.collection("subcategories").update(item.id!, { name: capitalizedNewName });
+        window.showInformationMessage(
+          `Subcategory "${currentLabel}" renamed to "${capitalizedNewName}"`
+        );
+        await snippetsDataProvider.refresh();
+      } catch (error) {
+        console.error("Error renaming subcategory:", error);
+        window.showErrorMessage("Failed to rename subcategory.");
+      }
+    }
+  );
 
-	// Misc
-  context.subscriptions.push(completionProvider);
-  context.subscriptions.push(generateTemplate);
+  const addCategory = commands.registerCommand("solwind.addCategory", async () => {
+    const categoryName = await window.showInputBox({
+      placeHolder: "Enter the category name",
+      prompt: "New Category Name",
+      validateInput: (text) => {
+        return text.trim().length === 0 ? "Category name cannot be empty" : null;
+      },
+    });
+
+    if (!categoryName) return;
+
+    try {
+      const capitalizedCategoryName = capitalizeFirstLetter(categoryName);
+      await pb.collection("categories").create({ name: capitalizedCategoryName });
+      window.showInformationMessage(`Category '${capitalizedCategoryName}' added successfully`);
+      snippetsDataProvider.refresh();
+    } catch (error: any) {
+      window.showErrorMessage(`Error: ${error.message}`);
+    }
+  });
+
+  const renameCategory = commands.registerCommand(
+    "solwind.renameCategory",
+    async (item: TreeItem) => {
+      let currentLabel: string;
+      if (typeof item.label === "string") {
+        currentLabel = item.label;
+      } else if (item.label && typeof item.label.label === "string") {
+        currentLabel = item.label.label;
+      } else {
+        currentLabel = "default-label";
+      }
+
+      const newName = await renamePrompt({
+        message: "Enter new category name",
+        value: currentLabel,
+      });
+      if (!newName) return;
+
+      try {
+        const capitalizedNewName = capitalizeFirstLetter(newName);
+        await pb.collection("categories").update(item.id!, { name: capitalizedNewName });
+        window.showInformationMessage(
+          `Category "${currentLabel}" renamed to "${capitalizedNewName}"`
+        );
+        await snippetsDataProvider.refresh();
+      } catch (error) {
+        console.error("Error renaming category:", error);
+        window.showErrorMessage("Failed to rename category.");
+      }
+    }
+  );
+
+  const deleteCategory = commands.registerCommand(
+    "solwind.deleteCategory",
+    async (item: TreeItem) => {
+      try {
+        const deleteCategory = await window.showInformationMessage(
+          `Do you want to delete "${item.label}"?`,
+          "Yes",
+          "No"
+        );
+        if (deleteCategory === "No" || !deleteCategory || deleteCategory === undefined) return;
+        await pb.collection("categories").delete(item.id!);
+        window.showInformationMessage(`Successfully deleted!`);
+        await snippetsDataProvider.refresh();
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        window.showErrorMessage("Failed to delete category.");
+      }
+    }
+  );
+
+  context.subscriptions.push(
+    openSnippet,
+    insertSnippet,
+    deleteSnippet,
+    generateTemplate,
+    refreshSnippets,
+    addSubcategory,
+    deleteSubcategory,
+    renameSubcategory,
+    addCategory,
+    renameCategory,
+    deleteCategory
+  );
 }

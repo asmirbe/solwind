@@ -2,7 +2,7 @@ import { window } from "vscode";
 import { type SnippetsDataProvider } from "../providers/SnippetsDataProvider";
 const PocketBase = require("pocketbase/cjs");
 import { Category, Subcategory } from "../types/Category";
-export const pb = new PocketBase("https://sw-pocketbase.up.railway.app", {
+export const pb = new PocketBase("https://pocketbase-hhnt-production.up.railway.app/", {
 	requestTimeout: 30000,
 });
 

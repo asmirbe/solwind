@@ -35,7 +35,7 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
         treeItem.contextValue = "category";
         treeItem.id = category.id;
         treeItem.description = `${snippetsCount} items`;
-        treeItem.iconPath = new ThemeIcon("folder-opened");
+        treeItem.iconPath = new ThemeIcon("folder");
         return treeItem;
       });
     }
@@ -55,7 +55,7 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
           treeItem.contextValue = "subcategory";
           treeItem.id = subcategory.id;
           treeItem.description = `${snippetsCount} items`;
-          treeItem.iconPath = new ThemeIcon("folder-opened");
+          treeItem.iconPath = new ThemeIcon("folder");
           return treeItem;
         });
 
@@ -70,7 +70,8 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
           );
           treeItem.contextValue = "snippet";
           treeItem.id = snippet.id;
-          treeItem.description = snippet.label || "";
+          treeItem.description = snippet.label;
+					treeItem.tooltip = snippet.label;
           treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
           treeItem.command = {
             title: "Open snippet",
@@ -92,7 +93,8 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
           );
           treeItem.contextValue = "snippet";
           treeItem.id = snippet.id;
-          treeItem.description = snippet.label || "";
+          treeItem.description = snippet.label;
+					treeItem.tooltip = snippet.label;
           treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
           treeItem.command = {
             title: "Open snippet",

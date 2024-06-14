@@ -1,74 +1,95 @@
-# Snippet Manager Extension
+# Solwind Snippets VSCode Extension
 
-The Snippet Manager Extension for Visual Studio Code allows you to create, manage, and use code snippets efficiently. Integrating with PocketBase, it provides a robust solution for handling snippets, categories, and templates.
+The Solwind Snippets extension for Visual Studio Code enhances your coding experience by providing features for managing code snippets, categories, and subcategories. It includes commands for creating, renaming, and deleting snippets, categories, and subcategories, as well as generating templates and providing autocompletion for HTML files.
 
 ## Features
 
-### 1. Add Snippets
-Create new snippets from selected text in the editor and save them to PocketBase with associated categories and subcategories.
-- **Command**: `extension.addSnippetFromSelection`
-- **Usage**: Select the desired text, right-click, and choose "Add Snippet from Selection."
+### Snippet Management
 
-### 2. Edit Snippets
-Edit existing snippets, including their labels, documentation, and insert text.
-- **Command**: `extension.editSnippet`
-- **Usage**: Right-click on a snippet in the Snippets Tree View and choose "Edit Snippet."
+- **Create Snippet from Selection**: Create a new snippet from the selected code in the active editor.
+- **Delete Snippet**: Delete an existing snippet.
+- **Show Snippet Detail View**: Render a webview to display detailed information about a selected snippet.
+- **Refresh Snippets**: Refresh the snippets list to reflect the latest changes.
 
-### 3. Delete Snippets
-Delete snippets from PocketBase.
-- **Command**: `extension.deleteSnippet`
-- **Usage**: Right-click on a snippet in the Snippets Tree View and choose "Delete Snippet."
+### Category Management
 
-### 4. Generate Files from Templates
-Generate files from predefined templates stored in PocketBase.
-- **Command**: `extension.generateFromTemplate`
-- **Usage**: Right-click on a folder in the Explorer and choose "Generate from Template."
+- **Add Category**: Add a new category.
+- **Rename Category**: Rename an existing category.
+- **Delete Category**: Delete an existing category.
 
-### 5. Snippet Insertion in HTML
-Provide snippet completions in HTML files based on the current line of text.
-- **Command**: Auto-completion in HTML files.
-- **Usage**: Start typing in an HTML file to see snippet suggestions.
+### Subcategory Management
 
-### 6. Refresh Snippets
-Manually refresh the snippets from PocketBase to ensure the latest data is loaded.
-- **Command**: `extension.refreshSnippets`
-- **Usage**: Use the command palette (Ctrl+Shift+P) and search for "Refresh Snippets."
+- **Add Subcategory**: Add a new subcategory under a specified category.
+- **Rename Subcategory**: Rename an existing subcategory.
+- **Delete Subcategory**: Delete an existing subcategory.
 
-### 7. User Authentication
-Log in and log out using PocketBase authentication to manage snippets securely.
-- **Commands**:
-  - `extension.login`
-  - `extension.logout`
-- **Usage**: Use the command palette (Ctrl+Shift+P) and search for "Login" or "Logout."
+### Template Management
 
-## How to Use
+- **Generate Template**: Generate an HTML template file in the specified folder.
 
-1. **Install the Extension**: Download and install the Snippet Manager Extension from the VS Code Marketplace.
-2. **Login**: Use the command palette to log in with your PocketBase credentials.
-3. **Create Snippets**: Select text in your editor, right-click, and choose "Add Snippet from Selection."
-4. **Manage Snippets**: Use the Snippets Tree View to edit or delete snippets.
-5. **Generate Files**: Right-click on a folder in the Explorer to generate files from templates.
-6. **Use Snippets**: Start typing in an HTML file to see snippet suggestions and auto-completions.
+### Autocompletion
 
-## Requirements
+- **HTML Snippet Autocompletion**: Provide completion items for HTML files based on matching snippets.
 
+## Usage
+
+### Commands
+
+- `solwind.addSnippetFromSelection`: Create a new snippet from the selected code in the active editor.
+- `solwind.deleteSnippet`: Delete an existing snippet.
+- `solwind.showSnippetDetailView`: Show the detail view of a selected snippet.
+- `solwind.refreshSnippets`: Refresh the snippets list.
+- `solwind.addCategory`: Add a new category.
+- `solwind.renameCategory`: Rename an existing category.
+- `solwind.deleteCategory`: Delete an existing category.
+- `solwind.addSubcategory`: Add a new subcategory under a specified category.
+- `solwind.renameSubcategory`: Rename an existing subcategory.
+- `solwind.deleteSubcategory`: Delete an existing subcategory.
+- `solwind.generateFromTemplate`: Generate an HTML template file in the specified folder.
+
+### Installation
+
+1. Clone the repository or download the source code.
+2. Open the source code folder in Visual Studio Code.
+3. Run `npm install` to install the dependencies.
+4. Press `F5` to launch the extension in a new VSCode window.
+
+### Contribution
+
+Feel free to open issues or submit pull requests for any improvements or bug fixes.
+
+## Development
+
+### Prerequisites
+
+- Node.js
 - Visual Studio Code
-- PocketBase for storing snippets, categories, and templates
 
-## Extension Commands
+### Setup
 
-- `extension.addSnippetFromSelection`: Add a snippet from selected text.
-- `extension.editSnippet`: Edit an existing snippet.
-- `extension.deleteSnippet`: Delete a snippet.
-- `extension.generateFromTemplate`: Generate files from a template.
-- `extension.refreshSnippets`: Refresh snippets from PocketBase.
-- `extension.login`: Log in to PocketBase.
-- `extension.logout`: Log out from PocketBase.
-
-## Contributing
-
-Feel free to contribute to this extension by submitting issues or pull requests in the [GitHub repository](#).
+1. Clone the repository.
+2. Run `npm install` to install dependencies.
+3. Open the project in Visual Studio Code.
+4. Press `F5` to start debugging the extension.
 
 ## License
 
 This project is licensed under the MIT License.
+
+---
+
+## Code Structure
+
+### Files and Directories
+
+- `src/extension.ts`: Main entry point for the extension.
+- `src/pocketbase/pocketbase.ts`: Handles interactions with PocketBase.
+- `src/providers/SnippetsDataProvider.ts`: Provides data for the snippets tree view.
+- `src/utilities/baseHTML.ts`: Contains base HTML template.
+- `src/utilities/prompts.ts`: Utility functions for user prompts.
+- `src/utilities/stringUtils.ts`: Utility functions for string formatting.
+
+## Acknowledgements
+
+This extension is powered by PocketBase and built with the support of the Visual Studio Code extension API.
+

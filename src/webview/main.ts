@@ -32,13 +32,16 @@ function main() {
 
   const saveButton = document.getElementById("submit-button") as Button;
   saveButton.addEventListener("click", () => saveSnippet());
+
+	const cancelButton = document.getElementById("cancel-button") as Button;
+	cancelButton.addEventListener("click", () => vscode.postMessage({ command: "cancel" }));
 }
 
 let openedSnippet: Snippet = {
 	id: "",
 	name: "",
 	label: "",
-	documentation: "",
+	description: "",
 	insertText: "",
 	category: "",
 	subcategory: ""
@@ -112,7 +115,7 @@ function saveSnippet() {
   const nameInput = document.getElementById("name") as TextField;
   const labelInput = document.getElementById("label") as TextField;
   const insertText = document.getElementById("insertText") as TextArea;
-  const documentation = document.getElementById("documentation") as TextArea;
+  const description = document.getElementById("description") as TextArea;
   const categoryInput = document.getElementById("category") as HTMLSelectElement;
   const subcategoryInput = document.getElementById("subcategory") as HTMLSelectElement;
 
@@ -120,13 +123,11 @@ function saveSnippet() {
     id: openedSnippet.id,
     name: nameInput?.value,
     label: formatLabel(labelInput?.value),
-		documentation: documentation?.value,
+		description: description?.value,
     insertText: insertText?.value,
     category: categoryInput?.value,
     subcategory: subcategoryInput?.value
   };
-
-	console.log(dataToUpdate);
 
   vscode.postMessage({ command: "updateSnippet", snippet: dataToUpdate });
 }
