@@ -83,7 +83,8 @@
 		"viewsWelcome": [
 			{
 				"view": "solwind.snippets",
-				"contents": "You can have paragraphs of text here. You can have [links](https://code.visualstudio.com) to external sources or [internal commands](command:solwind.setApiKey).\nUse new lines to have new paragraphs.\nPlace a link alone in a paragraph to make it a button\n[Hello](command:solwind.setApiKey)"
+				"contents": "Welcome to the Solwind extension! To get started, you need to set your API key.\n\n[Set API Key](command:solwind.setApiKey \"Setting the API key is mandatory\")\n\nOnce the API key is set, you will have access to all the features of this extension.",
+				"when": "!solwind.apiKeySet"
 			}
 		],
 		"viewsContainers": {
@@ -99,7 +100,7 @@
 			"snippets-container": [
 				{
 					"id": "solwind.snippets",
-					"name": "Welcome"
+					"name": "Code manager"
 				}
 			]
 		},
@@ -107,12 +108,12 @@
 			"view/title": [
 				{
 					"command": "solwind.refreshSnippets",
-					"when": "view == solwind.snippets",
+					"when": "view == solwind.snippets && solwind.apiKeySet",
 					"group": "navigation"
 				},
 				{
 					"command": "solwind.addCategory",
-					"when": "view == solwind.snippets",
+					"when": "view == solwind.snippets && solwind.apiKeySet",
 					"group": "navigation"
 				}
 			],
@@ -131,32 +132,32 @@
 			"view/item/context": [
 				{
 					"command": "solwind.deleteCategory",
-					"when": "view == solwind.snippets && viewItem == category",
+					"when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
 					"group": "inline"
 				},
 				{
 					"command": "solwind.renameCategory",
-					"when": "view == solwind.snippets && viewItem == category",
+					"when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
 					"group": "inline"
 				},
 				{
 					"command": "solwind.renameSubcategory",
-					"when": "view == solwind.snippets && viewItem == subcategory",
+					"when": "view == solwind.snippets && viewItem == subcategory && solwind.apiKeySet",
 					"group": "inline"
 				},
 				{
 					"command": "solwind.deleteSubcategory",
-					"when": "view == solwind.snippets && viewItem == subcategory",
+					"when": "view == solwind.snippets && viewItem == subcategory && solwind.apiKeySet",
 					"group": "inline"
 				},
 				{
 					"command": "solwind.addSubcategory",
-					"when": "view == solwind.snippets && viewItem == category",
+					"when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
 					"group": "inline"
 				},
 				{
 					"command": "solwind.deleteSnippet",
-					"when": "view == solwind.snippets && viewItem == snippet",
+					"when": "view == solwind.snippets && viewItem == snippet && solwind.apiKeySet",
 					"group": "inline"
 				}
 			]
@@ -173,6 +174,7 @@
 	"devDependencies": {
 		"@types/glob": "^8.0.0",
 		"@types/node": "^18",
+		"@types/uuid": "^9.0.8",
 		"@types/vscode": "^1.73.0",
 		"@types/vscode-webview": "^1.57.5",
 		"@typescript-eslint/eslint-plugin": "^6.7.0",
@@ -192,6 +194,7 @@
 		"node-html-parser": "^6.1.13",
 		"pocketbase": "^0.21.3",
 		"postcss": "^8.4.38",
-		"prism-code-editor": "^3.3.2"
+		"prism-code-editor": "^3.3.2",
+		"uuid": "^10.0.0"
 	}
 }

@@ -10,19 +10,28 @@ import { getWebviewContent } from "./ui/getWebviewContent";
 import { promptForCategory, promptForSubcategory, renamePrompt } from "./utilities/prompts";
 import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
 import { askForApiKey } from "./utilities/apiKey";
+import { setGlobalContext } from "./context/globalContext";
 
 export async function activate(context: ExtensionContext) {
-  context.globalState.update("solwind.apiKey", undefined);
-  const apiKey = context.globalState.get<string>("solwind.apiKey");
-	console.log(apiKey);
+	setGlobalContext(context);
 
-  if (!apiKey || apiKey === undefined || apiKey === "") askForApiKey(context);
+	context.globalState.update("solwind.apiKey", undefined);
+	const apiKey = context.globalState.get<string>("solwind.apiKey");
+	commands.executeCommand('setContext', 'solwind.apiKeySet', !!apiKey);
 
-  initializeSnippets(context);
-}
+	if (!apiKey || apiKey === undefined || apiKey === "") {
+	  const apiKeyEvent = await askForApiKey(context);
+	  apiKeyEvent(() => {
+		 initializeSnippets(context);
+		 commands.executeCommand('setContext', 'solwind.apiKeySet', true);
+	  });
+	} else {
+	  initializeSnippets(context);
+	}
+ }
 
-function initializeSnippets(context: ExtensionContext) {
-	if(!context.globalState.get("solwind.apiKey")) return;
+async function initializeSnippets(context: ExtensionContext) {
+  if (!context.globalState.get("solwind.apiKey")) return;
   const snippetsDataProvider = new SnippetsDataProvider();
   let panel: any | undefined = undefined;
 
