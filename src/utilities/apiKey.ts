@@ -1,32 +1,53 @@
-import { authApiKey } from "../pocketbase/pocketbase";
-import { ExtensionContext, commands, window, EventEmitter, Event } from "vscode";
+import { CustomAuthStore } from "../pocketbase/pocketbase";
+import { commands, window, EventEmitter, Event } from "vscode";
+import { getGlobalContext } from "../context/globalContext";
 
-export async function askForApiKey(context: ExtensionContext): Promise<Event<void>> {
-	const apiKeyUpdatedEmitter = new EventEmitter<void>();
+export async function setApiKey(): Promise<Event<void>> {
+   const context = getGlobalContext();
+   const apiKeyUpdatedEmitter = new EventEmitter<void>();
 
-	context.subscriptions.push(
-	  commands.registerCommand("solwind.setApiKey", async () => {
-		 const input = await window.showInputBox({
-			prompt: "Enter your PocketBase API Key",
-			placeHolder: "API Key",
-		 });
-		 if (!input) {
-			return;
-		 }
-		 try {
-			const result = await authApiKey(input);
-			if (!result || !result.items || result.items.length === 0) {
-			  return window.showErrorMessage("Authentication failed. Please check your API Key.");
-			}
-			context.globalState.update('solwind.apiKey', input);
-			window.showInformationMessage('API Key is valid. You are now authenticated.');
-			apiKeyUpdatedEmitter.fire(); // Emit the event
-		 } catch (error) {
-			console.error("Authentication failed:", error);
-			window.showErrorMessage("Authentication failed. Please check your API Key.");
-		 }
-	  })
-	);
+   context!.subscriptions.push(
+      commands.registerCommand("solwind.setApiKey", async () => {
+         const input = await window.showInputBox({
+            prompt: "Enter your PocketBase API Key",
+            placeHolder: "API Key",
+         });
+         if (!input) {
+            return;
+         }
+         try {
+            const authStore = new CustomAuthStore();
+            await authStore.login(input);
+            const token = authStore.getToken();
+            const expiry = authStore.getExpiry(); // Get the expiry from the auth store
 
-	return apiKeyUpdatedEmitter.event;
- }
+            if (token && expiry) {
+               context!.globalState.update("solwind.apiKey", input);
+               context!.globalState.update("solwind.apiToken", token);
+               context!.globalState.update("solwind.apiTokenExpiry", expiry);
+               window.showInformationMessage("API Key is valid. You are now authenticated.");
+               apiKeyUpdatedEmitter.fire();
+
+               // Update the context key
+               commands.executeCommand("setContext", "solwind.apiKeySet", true);
+            } else {
+               window.showErrorMessage("Authentication failed. Please check your API Key.");
+            }
+         } catch (error) {
+            console.error("Authentication failed:", error);
+            window.showErrorMessage("Authentication failed. Please check your API Key.");
+         }
+      })
+   );
+
+   return apiKeyUpdatedEmitter.event;
+}
+
+export async function deleteApiKey(auth: CustomAuthStore): Promise<void> {
+   try {
+      auth.clear();
+      commands.executeCommand("setContext", "solwind.apiKeySet", false);
+   } catch (error) {
+      console.error("Failed to delete API key:", error);
+   }
+}

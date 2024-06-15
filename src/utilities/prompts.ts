@@ -1,5 +1,4 @@
 import { window } from "vscode";
-import {capitalizeFirstLetter} from "./stringUtils";
 
 export async function promptForCategory(categories: any[]): Promise<string | undefined> {
   const categoryNames = categories.map((category) => category.name);
@@ -8,8 +7,13 @@ export async function promptForCategory(categories: any[]): Promise<string | und
   });
 }
 
-export async function promptForSubcategory(subcategories: any[], categoryId: string): Promise<string | undefined> {
-  const subcategoryNames = subcategories.filter((subcat) => subcat.category === categoryId).map((subcat) => subcat.name);
+export async function promptForSubcategory(
+  subcategories: any[],
+  categoryId: string
+): Promise<string | undefined> {
+  const subcategoryNames = subcategories
+    .filter((subcat) => subcat.category === categoryId)
+    .map((subcat) => subcat.name);
   return await window.showQuickPick(subcategoryNames, {
     placeHolder: "Select a subcategory",
   });

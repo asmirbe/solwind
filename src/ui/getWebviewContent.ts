@@ -61,7 +61,7 @@ export function getWebviewContent(webview: Webview, extensionUri: Uri, snippet: 
 					</div>
           <div class="inline-container">
 					<vscode-button id="submit-button">Save</vscode-button>
-          <vscode-button id="delete-button" appearance="secondary">Delete</vscode-button>
+          <vscode-button id="cancel-button" appearance="secondary">Cancel</vscode-button>
 					</div>
         </section>
         <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
