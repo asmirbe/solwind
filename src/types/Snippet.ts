@@ -8,6 +8,7 @@ export type Snippet = {
 	insertText: string;
 	category: string;
 	subcategory: string;
+	command?: any;
 }
 
 export type Snippets = {

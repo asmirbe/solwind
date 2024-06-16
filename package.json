@@ -27,7 +27,7 @@
 				"icon": "$(refresh)"
 			},
 			{
-				"command": "solwind.generateFromTemplate",
+				"command": "solwind.generateTemplate",
 				"title": "Generate a template"
 			},
 			{
@@ -61,7 +61,7 @@
 				"title": "Delete"
 			},
 			{
-				"command": "solwind.addSnippetFromSelection",
+				"command": "solwind.insertSnippet",
 				"title": "Add to solwind",
 				"icon": "$(add)",
 				"category": "Solwind"
@@ -128,13 +128,13 @@
 			],
 			"editor/context": [
 				{
-					"command": "solwind.addSnippetFromSelection",
+					"command": "solwind.insertSnippet",
 					"when": "editorTextFocus && editorHasSelection"
 				}
 			],
 			"explorer/context": [
 				{
-					"command": "solwind.generateFromTemplate",
+					"command": "solwind.generateTemplate",
 					"when": "explorerResourceIsFolder && explorerViewletVisible && !explorerResourceReadonly"
 				}
 			],

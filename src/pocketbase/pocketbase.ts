@@ -40,7 +40,7 @@ export class CustomAuthStore {
          commands.executeCommand("setContext", "solwind.apiKeySet", false);
 			window.showInformationMessage("API Key has been deleted. You are now unauthenticated.");
 			// Finally, reload the window
-         // commands.executeCommand("workbench.action.reloadWindow");
+         commands.executeCommand("workbench.action.reloadWindow");
       }
    }
 

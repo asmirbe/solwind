@@ -83,7 +83,7 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
                treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
                treeItem.command = {
                   title: "Open snippet",
-                  command: "solwind.showSnippetDetailView",
+                  command: "solwind.openSnippet",
                   arguments: [snippet], // Pass the snippet as an argument to the command
                };
                return treeItem;
@@ -106,7 +106,7 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
                treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
                treeItem.command = {
                   title: "Open snippet",
-                  command: "solwind.showSnippetDetailView",
+                  command: "solwind.openSnippet",
                   arguments: [snippet], // Pass the snippet as an argument to the command
                };
                return treeItem;
@@ -140,5 +140,17 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
 
    private setLoading(loading: boolean): void {
       this.isLoading = loading;
+   }
+
+   dispose(): void {
+      // Clear commands from all TreeItems
+      this.snippets.forEach((snippet) => {
+         snippet.command = undefined;
+      });
+
+      this.snippets = [];
+      this.categories = [];
+      this.subcategories = [];
+      this._onDidChangeTreeData.fire(undefined);
    }
 }

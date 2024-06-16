@@ -35,9 +35,9 @@ The Solwind Snippets extension for Visual Studio Code enhances your coding exper
 
 ### Commands
 
-- `solwind.addSnippetFromSelection`: Create a new snippet from the selected code in the active editor.
+- `solwind.insertSnippet`: Create a new snippet from the selected code in the active editor.
 - `solwind.deleteSnippet`: Delete an existing snippet.
-- `solwind.showSnippetDetailView`: Show the detail view of a selected snippet.
+- `solwind.openSnippet`: Show the detail view of a selected snippet.
 - `solwind.refreshSnippets`: Refresh the snippets list.
 - `solwind.addCategory`: Add a new category.
 - `solwind.renameCategory`: Rename an existing category.
@@ -45,7 +45,7 @@ The Solwind Snippets extension for Visual Studio Code enhances your coding exper
 - `solwind.addSubcategory`: Add a new subcategory under a specified category.
 - `solwind.renameSubcategory`: Rename an existing subcategory.
 - `solwind.deleteSubcategory`: Delete an existing subcategory.
-- `solwind.generateFromTemplate`: Generate an HTML template file in the specified folder.
+- `solwind.generateTemplate`: Generate an HTML template file in the specified folder.
 
 ### Installation
 

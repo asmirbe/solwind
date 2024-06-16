@@ -10,7 +10,6 @@ import {
    ViewColumn,
    Uri,
    TreeItem,
-   TreeDataProvider,
 } from "vscode";
 import { SnippetsDataProvider } from "./providers/SnippetsDataProvider";
 import { pb, createSubcategory, CustomAuthStore } from "./pocketbase/pocketbase";
@@ -21,87 +20,46 @@ import { setApiKey, deleteApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
 
 export async function activate(context: ExtensionContext) {
-	setGlobalContext(context);
-	const authStore = new CustomAuthStore();
+   setGlobalContext(context);
+   const authStore = new CustomAuthStore();
 
-	// Register the setApiKey command
-	context.subscriptions.push(commands.registerCommand("solwind.setApiKey", async () => {
-		 const apiKeyEvent = await setApiKey();
-		 apiKeyEvent(() => {
-			  commands.executeCommand("setContext", "solwind.apiKeySet", true);
-			  initializeSnippets(context);
-		 });
-	}));
+   const apiKey = authStore.getApiKey();
+   const setApiKeyAndInitialize = async () => {
+      const apiKeyEvent = await setApiKey();
+      apiKeyEvent(() => {
+         commands.executeCommand("setContext", "solwind.apiKeySet", true);
+         initializeExtension(context, authStore);
+      });
+   };
 
-	const apiKey = authStore.getApiKey();
+   const handleTokenRefreshError = async (error: any) => {
+      console.error("Token refresh failed during extension activation:", error);
+      await commands.executeCommand("setContext", "solwind.apiKeySet", false);
+      await setApiKeyAndInitialize();
+   };
 
-	if (!apiKey) {
-		 await commands.executeCommand("setContext", "solwind.apiKeySet", false);
-		 const apiKeyEvent = await setApiKey();
-		 apiKeyEvent(() => {
-			  commands.executeCommand("setContext", "solwind.apiKeySet", true);
-			  initializeSnippets(context);
-		 });
-	} else {
-		 try {
-			  await authStore.refresh(); // Refresh the token with the existing API key
-			  if (authStore.isValid()) {
-					await commands.executeCommand("setContext", "solwind.apiKeySet", true);
-					initializeSnippets(context);
-			  } else {
-					await commands.executeCommand("setContext", "solwind.apiKeySet", false);
-					const apiKeyEvent = await setApiKey();
-					apiKeyEvent(() => {
-						 commands.executeCommand("setContext", "solwind.apiKeySet", true);
-						 initializeSnippets(context);
-					});
-			  }
-		 } catch (error) {
-			  console.error("Token refresh failed during extension activation:", error);
-			  await commands.executeCommand("setContext", "solwind.apiKeySet", false);
-			  const apiKeyEvent = await setApiKey();
-			  apiKeyEvent(() => {
-					commands.executeCommand("setContext", "solwind.apiKeySet", true);
-					initializeSnippets(context);
-			  });
-		 }
-	}
-
-	// Register the disconnect command
-	context.subscriptions.push(commands.registerCommand("solwind.deleteApiKey", async () => {
-		 await deleteApiKey(authStore);
-		 refreshUI(context);
-	}));
-}
-
-async function refreshUI(context: ExtensionContext) {
-	// Dispose the existing tree view
-	for (const subscription of context.subscriptions) {
-		 if (subscription) {
-			  subscription.dispose();
-		 }
-	}
-
-	// Set the context to false to show the viewsWelcome content
-	await commands.executeCommand("setContext", "solwind.apiKeySet", false);
-
-	// Re-initialize the tree view to refresh the UI
-	window.createTreeView("solwind.snippets", {
-		 treeDataProvider: new EmptyDataProvider(),
-	});
-}
-
-// Define a dummy data provider to show an empty view
-class EmptyDataProvider implements TreeDataProvider<undefined> {
-   getTreeItem(element: undefined): TreeItem {
-      return new TreeItem("");
-   }
-   getChildren(element?: undefined): undefined[] {
-      return [];
+   if (!apiKey) {
+      await commands.executeCommand("setContext", "solwind.apiKeySet", false);
+      await setApiKeyAndInitialize();
+   } else {
+      try {
+         await authStore.refresh(); // Refresh the token with the existing API key
+         if (authStore.isValid()) {
+            await commands.executeCommand("setContext", "solwind.apiKeySet", true);
+            initializeExtension(context, authStore);
+         } else {
+            await commands.executeCommand("setContext", "solwind.apiKeySet", false);
+            await setApiKeyAndInitialize();
+         }
+      } catch (error) {
+         await handleTokenRefreshError(error);
+      }
    }
 }
 
-async function initializeSnippets(context: ExtensionContext) {
+
+// Extension init
+async function initializeExtension(context: ExtensionContext, authStore: CustomAuthStore) {
    const snippetsDataProvider = new SnippetsDataProvider();
    let panel: any | undefined = undefined;
 
@@ -112,7 +70,7 @@ async function initializeSnippets(context: ExtensionContext) {
 
    await snippetsDataProvider.refresh();
 
-   const openSnippet = commands.registerCommand("solwind.showSnippetDetailView", () => {
+   const openSnippet = commands.registerCommand("solwind.openSnippet", () => {
       const selectedTreeViewItem = treeView.selection[0];
       const matchingSnippet = snippetsDataProvider.snippets.find(
          (x) => x.id === selectedTreeViewItem.id
@@ -175,12 +133,9 @@ async function initializeSnippets(context: ExtensionContext) {
       });
    });
 
-   const insertSnippet = commands.registerCommand("solwind.addSnippetFromSelection", async () => {
+   const insertSnippet = commands.registerCommand("solwind.insertSnippet", async () => {
       const editor = window.activeTextEditor;
-      if (!editor) {
-         window.showErrorMessage("No active editor found.");
-         return;
-      }
+      if (!editor) return;
 
       const selection = editor.selection;
       const selectedText = editor.document.getText(selection);
@@ -199,10 +154,7 @@ async function initializeSnippets(context: ExtensionContext) {
          const subcategories: any[] = subcategoriesResponse.items || [];
 
          const selectedCategoryName = await promptForCategory(categories);
-         if (!selectedCategoryName) {
-            window.showErrorMessage("Category selection is required.");
-            return;
-         }
+         if (!selectedCategoryName) return;
 
          const selectedCategory = categories.find(
             (category) => category.name === selectedCategoryName
@@ -213,10 +165,7 @@ async function initializeSnippets(context: ExtensionContext) {
             selectedCategory.id
          );
 
-         if (!selectedSubcategoryName) {
-            window.showErrorMessage("Subcategory selection is required.");
-            return;
-         }
+         if (!selectedSubcategoryName) return;
 
          const selectedSubcategory = subcategories.find(
             (subcat) => subcat.name === selectedSubcategoryName
@@ -279,7 +228,7 @@ async function initializeSnippets(context: ExtensionContext) {
    );
 
    const generateTemplate = commands.registerCommand(
-      "solwind.generateFromTemplate",
+      "solwind.generateTemplate",
       async (folderUri: Uri) => {
          try {
             const response = await pb.collection("templates").getFullList({
@@ -496,17 +445,26 @@ async function initializeSnippets(context: ExtensionContext) {
       }
    );
 
+	const deleteApiKey = commands.registerCommand("solwind.deleteApiKey", async () => {
+		authStore.clear();
+		treeView.dispose();
+		snippetsDataProvider.dispose();
+	})
+
    context.subscriptions.push(
-      openSnippet,
-      insertSnippet,
-      deleteSnippet,
-      generateTemplate,
-      refreshSnippets,
-      addSubcategory,
-      deleteSubcategory,
-      renameSubcategory,
-      addCategory,
-      renameCategory,
-      deleteCategory
-   );
+		treeView,
+		openSnippet,
+		insertSnippet,
+		deleteSnippet,
+		generateTemplate,
+		refreshSnippets,
+		addSubcategory,
+		deleteSubcategory,
+		renameSubcategory,
+		addCategory,
+		renameCategory,
+		deleteCategory,
+		deleteApiKey
+	);
 }
+
