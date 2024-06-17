@@ -12,7 +12,7 @@ import { Category, Subcategory } from "../types/Category";
 import { Snippet } from "../types/Snippet";
 import { capitalizeFirstLetter } from "../utilities/stringUtils";
 
-export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
+class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
    public snippets: Snippet[] = [];
    public categories: Category[] = [];
    public subcategories: Subcategory[] = [];
@@ -154,3 +154,5 @@ export class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
       this._onDidChangeTreeData.fire(undefined);
    }
 }
+
+export default SnippetsDataProvider;

@@ -10,19 +10,33 @@ import {
    ViewColumn,
    Uri,
    TreeItem,
+	extensions,
 } from "vscode";
-import { SnippetsDataProvider } from "./providers/SnippetsDataProvider";
-import { pb, createSubcategory, CustomAuthStore } from "./pocketbase/pocketbase";
+import SnippetsDataProvider from "./providers/SnippetsDataProvider";
+import HTMLCompletionProvider from "./providers/HTMLCompletionProvider";
+import {
+   pb,
+   createSubcategory,
+   CustomAuthStore,
+} from "./pocketbase/pocketbase";
 import { getWebviewContent } from "./ui/getWebviewContent";
 import { promptForCategory, promptForSubcategory, renamePrompt } from "./utilities/prompts";
 import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
-import { setApiKey, deleteApiKey } from "./utilities/apiKey";
+import { setApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
 
 export async function activate(context: ExtensionContext) {
+	// Get actual extension version
+	const currentExtensionVersion = extensions.getExtension('asmirbe.solwind')?.packageJSON.version;
+	const nextExtensionVersion = await pb.collection('version').getOne("yr0aiacmjhc5jz0", { fields: "version" });
+
+	if (currentExtensionVersion !== nextExtensionVersion.version) {
+		window.showInformationMessage(`New Solwind version available: v${nextExtensionVersion.version}`);
+	}
+
    setGlobalContext(context);
    const authStore = new CustomAuthStore();
-
+   const contextApiKey = context.globalState.get("solwind.apiKey");
    const apiKey = authStore.getApiKey();
    const setApiKeyAndInitialize = async () => {
       const apiKeyEvent = await setApiKey();
@@ -56,7 +70,6 @@ export async function activate(context: ExtensionContext) {
       }
    }
 }
-
 
 // Extension init
 async function initializeExtension(context: ExtensionContext, authStore: CustomAuthStore) {
@@ -445,26 +458,26 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
       }
    );
 
-	const deleteApiKey = commands.registerCommand("solwind.deleteApiKey", async () => {
-		authStore.clear();
-		treeView.dispose();
-		snippetsDataProvider.dispose();
-	})
+   const deleteApiKey = commands.registerCommand("solwind.deleteApiKey", async () => {
+      authStore.clear();
+      treeView.dispose();
+      snippetsDataProvider.dispose();
+   });
 
    context.subscriptions.push(
-		treeView,
-		openSnippet,
-		insertSnippet,
-		deleteSnippet,
-		generateTemplate,
-		refreshSnippets,
-		addSubcategory,
-		deleteSubcategory,
-		renameSubcategory,
-		addCategory,
-		renameCategory,
-		deleteCategory,
-		deleteApiKey
-	);
+      treeView,
+      openSnippet,
+      insertSnippet,
+      deleteSnippet,
+      generateTemplate,
+      refreshSnippets,
+      addSubcategory,
+      deleteSubcategory,
+      renameSubcategory,
+      addCategory,
+      renameCategory,
+      deleteCategory,
+			HTMLCompletionProvider,
+      deleteApiKey
+   );
 }
-

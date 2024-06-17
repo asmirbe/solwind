@@ -1,5 +1,5 @@
 import { window, commands } from "vscode";
-import { SnippetsDataProvider } from "../providers/SnippetsDataProvider"; // Adjust the import path accordingly
+import type SnippetsDataProvider from "../providers/SnippetsDataProvider"; // Adjust the import path accordingly
 const PocketBase = require("pocketbase/cjs");
 import { Category, Subcategory } from "../types/Category";
 import { getGlobalContext } from "../context/globalContext";
@@ -38,8 +38,8 @@ export class CustomAuthStore {
 
          // Update the context key
          commands.executeCommand("setContext", "solwind.apiKeySet", false);
-			window.showInformationMessage("API Key has been deleted. You are now unauthenticated.");
-			// Finally, reload the window
+         window.showInformationMessage("API Key has been deleted. You are now unauthenticated.");
+         // Finally, reload the window
          commands.executeCommand("workbench.action.reloadWindow");
       }
    }
@@ -79,7 +79,9 @@ export class CustomAuthStore {
       try {
          const result = await pb.collection("users").authRefresh();
          const newExpiry = Date.now() + 60000; // Adjust duration as needed
-         const updateExpiry = await pb.collection("users").update(result.record.id, { expiry: newExpiry });
+         const updateExpiry = await pb
+            .collection("users")
+            .update(result.record.id, { expiry: newExpiry });
          this.save(result.token, updateExpiry.expiry);
       } catch (error) {
          console.error("Token refresh failed:", error);
@@ -91,7 +93,9 @@ export class CustomAuthStore {
       try {
          const result = await pb.collection("users").authWithPassword("admin", apiKey);
          const newExpiry = Date.now() + 60000; // You may need to adjust this based on actual response
-         const updateExpiry = await pb.collection("users").update(result.record.id, { expiry: newExpiry });
+         const updateExpiry = await pb
+            .collection("users")
+            .update(result.record.id, { expiry: newExpiry });
          this.save(result.token, updateExpiry.expiry);
       } catch (error) {
          console.error("Login failed:", error);
@@ -120,6 +124,7 @@ export function fetchMatchingSnippets(term: string) {
          pb.collection("snippets")
             .getList(1, 20, {
                filter: pb.filter("label ~ {:query}", { query: term }),
+               requestKey: null, // Disable auto cancellation for this request
             })
             .then((response: any) => {
                const snippets = response.items || [];
@@ -154,9 +159,13 @@ export async function retrieveSnippets(
       await pb.authStore.refresh(); // Refresh the token before making the request
 
       const [snippetsResponse, categoriesResponse, subcategoriesResponse] = await Promise.all([
-         pb.collection("snippets").getList(1, 30, { expand: "category,subcategory" }),
-         pb.collection("categories").getList(1, 100, { sort: "name" }),
-         pb.collection("subcategories").getList(1, 100, { sort: "name", expand: "category" }),
+         pb
+            .collection("snippets")
+            .getList(1, 30, { expand: "category,subcategory", requestKey: null }),
+         pb.collection("categories").getList(1, 100, { sort: "name", requestKey: null }),
+         pb
+            .collection("subcategories")
+            .getList(1, 100, { sort: "name", expand: "category", requestKey: null }),
       ]);
 
       const snippets: any[] = snippetsResponse.items || [];
