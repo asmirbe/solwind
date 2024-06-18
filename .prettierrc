@@ -5,9 +5,11 @@
 	"semi": true,
 	"singleQuote": false,
 	"quoteProps": "consistent",
+	"htmlWhitespaceSensitivity": "ignore",
 	"jsxSingleQuote": false,
 	"trailingComma": "es5",
-	"bracketSpacing": true,
+	"bracketSpacing": false,
 	"jsxBracketSameLine": true,
+	"bracketSameLine": false,
 	"arrowParens": "always"
 }

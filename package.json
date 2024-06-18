@@ -179,7 +179,8 @@
 		"watch": "node ./esbuild.js --watch",
 		"lint": "eslint src --ext ts",
 		"build:production": "NODE_ENV=production node ./esbuild.js",
-		"build:publish": "NODE_ENV=publish node ./esbuild.js && vsce package"
+		"build:publish": "NODE_ENV=publish node ./esbuild.js && vsce package",
+		"prettier": "prettier --write src/**/*.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^18",
