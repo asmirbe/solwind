@@ -1,8 +1,8 @@
-import { window, commands } from "vscode";
+import {window, commands} from "vscode";
 import type SnippetsDataProvider from "../providers/SnippetsDataProvider"; // Adjust the import path accordingly
 const PocketBase = require("pocketbase/cjs");
-import { Category, Subcategory } from "../types/Category";
-import { getGlobalContext } from "../context/globalContext";
+import {Category, Subcategory} from "../types/Category";
+import {getGlobalContext} from "../context/globalContext";
 
 export const pb = new PocketBase("https://pocketbase-hhnt-production.up.railway.app/", {
    requestTimeout: 30000,
@@ -32,15 +32,19 @@ export class CustomAuthStore {
       this.expiry = null;
       const context = getGlobalContext();
       if (context) {
-			context.globalState.update("solwind.apiToken", undefined);
+         context.globalState.update("solwind.apiToken", undefined);
          context.globalState.update("solwind.apiTokenExpiry", undefined);
          context.globalState.update("solwind.apiKey", undefined);
 
          // Update the context key
          commands.executeCommand("setContext", "solwind.apiKeySet", false);
          // Finally, reload the window
-			const reload = window.showInformationMessage("API Key has been deleted. You are now unauthenticated.", 'Yes', 'No');
-			if(!reload) return;
+         const reload = window.showInformationMessage(
+            "API Key has been deleted. You are now unauthenticated.",
+            "Yes",
+            "No"
+         );
+         if (!reload) return;
          commands.executeCommand("workbench.action.reloadWindow");
       }
    }
@@ -82,7 +86,7 @@ export class CustomAuthStore {
          const newExpiry = Date.now() + 63072000; // Adjust duration as needed
          const updateExpiry = await pb
             .collection("users")
-            .update(result.record.id, { expiry: newExpiry });
+            .update(result.record.id, {expiry: newExpiry});
          this.save(result.token, updateExpiry.expiry);
       } catch (error) {
          console.error("Token refresh failed:", error);
@@ -96,7 +100,7 @@ export class CustomAuthStore {
          const newExpiry = Date.now() + 63072000; // You may need to adjust this based on actual response
          const updateExpiry = await pb
             .collection("users")
-            .update(result.record.id, { expiry: newExpiry });
+            .update(result.record.id, {expiry: newExpiry});
          this.save(result.token, updateExpiry.expiry);
       } catch (error) {
          console.error("Login failed:", error);
@@ -113,7 +117,7 @@ pb.beforeSend = function (url: any, options: any) {
       options.headers["Authorization"] = token;
    }
 
-   return { url, options: options };
+   return {url, options: options};
 };
 
 export function fetchMatchingSnippets(term: string) {
@@ -124,7 +128,7 @@ export function fetchMatchingSnippets(term: string) {
       function makeRequest() {
          pb.collection("snippets")
             .getList(1, 20, {
-               filter: pb.filter("label ~ {:query}", { query: term }),
+               filter: pb.filter("label ~ {:query}", {query: term}),
                requestKey: null, // Disable auto cancellation for this request
             })
             .then((response: any) => {
@@ -162,11 +166,11 @@ export async function retrieveSnippets(
       const [snippetsResponse, categoriesResponse, subcategoriesResponse] = await Promise.all([
          pb
             .collection("snippets")
-            .getList(1, 30, { expand: "category,subcategory", requestKey: null }),
-         pb.collection("categories").getList(1, 100, { sort: "name", requestKey: null }),
+            .getList(1, 30, {expand: "category,subcategory", requestKey: null}),
+         pb.collection("categories").getList(1, 100, {sort: "name", requestKey: null}),
          pb
             .collection("subcategories")
-            .getList(1, 100, { sort: "name", expand: "category", requestKey: null }),
+            .getList(1, 100, {sort: "name", expand: "category", requestKey: null}),
       ]);
 
       const snippets: any[] = snippetsResponse.items || [];

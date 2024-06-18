@@ -4,3 +4,4 @@
 # Ignore the build directory
 /out
 *.vsix
+components/

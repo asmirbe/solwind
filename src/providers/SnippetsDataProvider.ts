@@ -7,10 +7,10 @@ import {
    Uri,
    TreeItemCollapsibleState,
 } from "vscode";
-import { retrieveSnippets } from "../pocketbase/pocketbase"; // Adjust the import path as necessary
-import { Category, Subcategory } from "../types/Category";
-import { Snippet } from "../types/Snippet";
-import { capitalizeFirstLetter } from "../utilities/stringUtils";
+import {retrieveSnippets} from "../pocketbase/pocketbase"; // Adjust the import path as necessary
+import {Category, Subcategory} from "../types/Category";
+import {Snippet} from "../types/Snippet";
+import {capitalizeFirstLetter} from "../utilities/stringUtils";
 
 class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
    public snippets: Snippet[] = [];

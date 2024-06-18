@@ -1,6 +1,6 @@
-import { CustomAuthStore } from "../pocketbase/pocketbase";
-import { commands, window, EventEmitter, Event } from "vscode";
-import { getGlobalContext } from "../context/globalContext";
+import {CustomAuthStore} from "../pocketbase/pocketbase";
+import {commands, window, EventEmitter, Event} from "vscode";
+import {getGlobalContext} from "../context/globalContext";
 
 export async function setApiKey(): Promise<Event<void>> {
    const context = getGlobalContext();

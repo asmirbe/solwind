@@ -1,11 +1,11 @@
-import { ExtensionContext } from "vscode";
+import {ExtensionContext} from "vscode";
 
 let globalContext: ExtensionContext | null = null;
 
 export function setGlobalContext(context: ExtensionContext) {
-  globalContext = context;
+   globalContext = context;
 }
 
 export function getGlobalContext(): ExtensionContext | null {
-  return globalContext;
+   return globalContext;
 }
