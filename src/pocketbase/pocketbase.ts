@@ -78,7 +78,7 @@ export class CustomAuthStore {
 
       try {
          const result = await pb.collection("users").authRefresh();
-         const newExpiry = Date.now() + 60000; // Adjust duration as needed
+         const newExpiry = Date.now() + 63072000; // Adjust duration as needed
          const updateExpiry = await pb
             .collection("users")
             .update(result.record.id, { expiry: newExpiry });
@@ -92,7 +92,7 @@ export class CustomAuthStore {
    async login(apiKey: string) {
       try {
          const result = await pb.collection("users").authWithPassword("admin", apiKey);
-         const newExpiry = Date.now() + 60000; // You may need to adjust this based on actual response
+         const newExpiry = Date.now() + 63072000; // You may need to adjust this based on actual response
          const updateExpiry = await pb
             .collection("users")
             .update(result.record.id, { expiry: newExpiry });
