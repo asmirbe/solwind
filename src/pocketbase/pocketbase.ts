@@ -131,7 +131,7 @@ export function fetchMatchingSnippets(term: string) {
                filter: pb.filter("label ~ {:query}", {query: term}),
                requestKey: null, // Disable auto cancellation for this request
             })
-            .then((response: any) => {
+            .then(async (response: any) => {
                const snippets = response.items || [];
                const matchingSnippets = snippets.filter(
                   (obj: any) => obj && obj.label && obj.label.includes(term)

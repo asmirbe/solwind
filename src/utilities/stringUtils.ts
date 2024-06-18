@@ -5,7 +5,9 @@ export function capitalizeFirstLetter(string: string) {
 export function formatLabel(label: string): string {
    const prefix = "tw-";
    if (!label.startsWith(prefix)) {
-      return prefix + label;
+      label = prefix + label;
    }
+   label = label.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+   label = label.replace(/\s+/g, '-');
    return label;
 }
