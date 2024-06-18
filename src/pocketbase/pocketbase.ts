@@ -32,14 +32,15 @@ export class CustomAuthStore {
       this.expiry = null;
       const context = getGlobalContext();
       if (context) {
-         context.globalState.update("solwind.apiToken", undefined);
+			context.globalState.update("solwind.apiToken", undefined);
          context.globalState.update("solwind.apiTokenExpiry", undefined);
          context.globalState.update("solwind.apiKey", undefined);
 
          // Update the context key
          commands.executeCommand("setContext", "solwind.apiKeySet", false);
-         window.showInformationMessage("API Key has been deleted. You are now unauthenticated.");
          // Finally, reload the window
+			const reload = window.showInformationMessage("API Key has been deleted. You are now unauthenticated.", 'Yes', 'No');
+			if(!reload) return;
          commands.executeCommand("workbench.action.reloadWindow");
       }
    }

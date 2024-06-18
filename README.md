@@ -35,7 +35,7 @@ The Solwind Snippets extension for Visual Studio Code enhances your coding exper
 
 ### Commands
 
-- `solwind.insertSnippet`: Create a new snippet from the selected code in the active editor.
+- `solwind.createSnippet`: Create a new snippet from the selected code in the active editor.
 - `solwind.deleteSnippet`: Delete an existing snippet.
 - `solwind.openSnippet`: Show the detail view of a selected snippet.
 - `solwind.refreshSnippets`: Refresh the snippets list.
