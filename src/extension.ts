@@ -151,7 +151,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			}
 
 			snippetLabel = formatLabel(snippetLabel);
-			console.log(snippetLabel);
+
 			const snippetData: any = {
 				name: snippetName,
 				label: snippetLabel,
@@ -161,7 +161,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			};
 
 
-			// await pb.collection("snippets").create(snippetData);
+			await pb.collection("snippets").create(snippetData);
 
 			window.showInformationMessage("Snippet created successfully!");
 			await snippetsDataProvider.refresh();

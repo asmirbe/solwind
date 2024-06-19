@@ -6,90 +6,35 @@ The Solwind Snippets extension for Visual Studio Code enhances your coding exper
 
 ### Snippet Management
 
-- **Create Snippet from Selection**: Create a new snippet from the selected code in the active editor.
-- **Delete Snippet**: Delete an existing snippet.
-- **Show Snippet Detail View**: Render a webview to display detailed information about a selected snippet.
-- **Refresh Snippets**: Refresh the snippets list to reflect the latest changes.
+- **Create Snippet from Selection**: Create a new snippet from the selected code in the active editor. This feature allows users to easily save useful code snippets for later use.
+- **Delete Snippet**: Delete an existing snippet. This command helps in managing the snippet library by removing unwanted or outdated snippets.
+- **Show Snippet Detail View**: Render a webview to display detailed information about a selected snippet. This feature enhances the user experience by providing a detailed view of snippet content.
+- **Refresh Snippets**: Refresh the snippets list to reflect the latest changes. Ensures that the snippets list is always up to date with the latest additions or deletions.
 
 ### Category Management
 
-- **Add Category**: Add a new category.
-- **Rename Category**: Rename an existing category.
-- **Delete Category**: Delete an existing category.
+- **Add Category**: Add a new category. This command allows for better organization of snippets by grouping them into categories.
+- **Rename Category**: Rename an existing category. This feature provides flexibility in managing and organizing snippet categories.
+- **Delete Category**: Delete an existing category. Helps in maintaining a clean and relevant category list by removing unused categories.
 
 ### Subcategory Management
 
-- **Add Subcategory**: Add a new subcategory under a specified category.
-- **Rename Subcategory**: Rename an existing subcategory.
-- **Delete Subcategory**: Delete an existing subcategory.
+- **Add Subcategory**: Add a new subcategory under a specified category. Enhances snippet organization by allowing more granular categorization.
+- **Rename Subcategory**: Rename an existing subcategory. Offers the ability to update subcategory names for better clarity or organization.
+- **Delete Subcategory**: Delete an existing subcategory. Similar to deleting categories, this command helps in keeping the subcategory list relevant and tidy.
 
 ### Template Management
 
-- **Generate Template**: Generate an HTML template file in the specified folder.
+- **Generate Template**: Generate an HTML template file in the specified folder. This feature aids in quickly setting up new HTML files with predefined templates, enhancing productivity.
 
 ### Autocompletion
 
-- **HTML Snippet Autocompletion**: Provide completion items for HTML files based on matching snippets.
+- **HTML Snippet Autocompletion**: Provide completion items for HTML files based on matching snippets. This feature significantly speeds up HTML coding by suggesting relevant snippets as you type.
 
 ## Usage
 
-### Commands
-
-- `solwind.createSnippet`: Create a new snippet from the selected code in the active editor.
-- `solwind.deleteSnippet`: Delete an existing snippet.
-- `solwind.openSnippet`: Show the detail view of a selected snippet.
-- `solwind.refreshSnippets`: Refresh the snippets list.
-- `solwind.addCategory`: Add a new category.
-- `solwind.renameCategory`: Rename an existing category.
-- `solwind.deleteCategory`: Delete an existing category.
-- `solwind.addSubcategory`: Add a new subcategory under a specified category.
-- `solwind.renameSubcategory`: Rename an existing subcategory.
-- `solwind.deleteSubcategory`: Delete an existing subcategory.
-- `solwind.generateTemplate`: Generate an HTML template file in the specified folder.
-
-### Installation
-
-1. Clone the repository or download the source code.
-2. Open the source code folder in Visual Studio Code.
-3. Run `npm install` to install the dependencies.
-4. Press `F5` to launch the extension in a new VSCode window.
-
-### Contribution
-
-Feel free to open issues or submit pull requests for any improvements or bug fixes.
-
-## Development
-
-### Prerequisites
-
-- Node.js
-- Visual Studio Code
-
-### Setup
-
-1. Clone the repository.
-2. Run `npm install` to install dependencies.
-3. Open the project in Visual Studio Code.
-4. Press `F5` to start debugging the extension.
+To use the commands provided by the Solwind Snippets extension, you can access them through the Command Palette (`Ctrl+Shift+P` on Windows/Linux, `Cmd+Shift+P` on macOS) or via context menus in the Visual Studio Code editor.
 
 ## License
 
-This project is licensed under the MIT License.
-
----
-
-## Code Structure
-
-### Files and Directories
-
-- `src/extension.ts`: Main entry point for the extension.
-- `src/pocketbase/pocketbase.ts`: Handles interactions with PocketBase.
-- `src/providers/SnippetsDataProvider.ts`: Provides data for the snippets tree view.
-- `src/utilities/baseHTML.ts`: Contains base HTML template.
-- `src/utilities/prompts.ts`: Utility functions for user prompts.
-- `src/utilities/stringUtils.ts`: Utility functions for string formatting.
-
-## Acknowledgements
-
-This extension is powered by PocketBase and built with the support of the Visual Studio Code extension API.
-
+This project is licensed under the MIT License. See the LICENSE file for more details.

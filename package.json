@@ -1,205 +1,205 @@
 {
-   "name": "solwind",
-   "displayName": "Solwind",
-   "description": "Solwind is a code snippet manager that allows you to save and reuse your code snippets.",
-   "version": "0.0.5",
-   "publisher": "asmirbe",
-   "private": true,
-   "license": "MIT",
-   "icon": "resources/logo.png",
-   "repository": {
-      "type": "git",
-      "url": "https://github.com/asmirbe/solwind"
-   },
-   "engines": {
-      "vscode": "^1.73.0"
-   },
-   "categories": [
-      "Other"
-   ],
-   "activationEvents": [
-      "onLanguage:html"
-   ],
-   "contributes": {
-      "commands": [
-         {
-            "command": "solwind.refreshSnippets",
-            "title": "Refresh",
-            "icon": "$(refresh)"
-         },
-         {
-            "command": "solwind.generateTemplate",
-            "title": "Generate a template"
-         },
-         {
-            "command": "solwind.editSnippet",
-            "icon": "$(whole-word)",
-            "title": "Edit"
-         },
-         {
-            "command": "solwind.deleteSnippet",
-            "icon": "$(trash)",
-            "title": "Delete"
-         },
-         {
-            "command": "solwind.renameCategory",
-            "icon": "$(whole-word)",
-            "title": "Rename"
-         },
-         {
-            "command": "solwind.addSubcategory",
-            "title": "Add Subcategory",
-            "icon": "$(add)"
-         },
-         {
-            "command": "solwind.renameSubcategory",
-            "icon": "$(whole-word)",
-            "title": "Rename"
-         },
-         {
-            "command": "solwind.deleteSubcategory",
-            "icon": "$(trash)",
-            "title": "Delete"
-         },
-         {
-            "command": "solwind.createSnippet",
-            "title": "Add to solwind",
-            "icon": "$(add)",
-            "category": "Solwind"
-         },
-         {
-            "command": "solwind.addCategory",
-            "title": "Add Category",
-            "icon": "$(add)"
-         },
-         {
-            "command": "solwind.deleteCategory",
-            "icon": "$(trash)",
-            "title": "Delete"
-         },
-         {
-            "command": "solwind.setApiKey",
-            "title": "Set API Key",
-            "category": "Solwind Authentication",
-            "enablement": "!solwind.apiKeySet"
-         },
-         {
-            "command": "solwind.deleteApiKey",
-            "title": "Clear API Key",
-            "category": "Solwind Authentication",
-            "enablement": "solwind.apiKeySet"
-         }
-      ],
-      "viewsWelcome": [
-         {
-            "view": "solwind.snippets",
-            "contents": "Welcome to the Solwind extension! To get started, you need to set your API key.\n\n[Set API Key](command:solwind.setApiKey \"Setting the API key is mandatory\")\n\nOnce the API key is set, you will have access to all the features of this extension.",
-            "when": "!solwind.apiKeySet"
-         }
-      ],
-      "viewsContainers": {
-         "activitybar": [
-            {
-               "id": "snippets-container",
-               "title": "Solwind",
-               "icon": "./resources/logo.svg"
-            }
-         ]
+  "name": "solwind",
+  "displayName": "Solwind",
+  "description": "Solwind is a code snippet manager that allows you to save and reuse your code snippets.",
+  "version": "0.0.6",
+  "publisher": "asmirbe",
+  "private": true,
+  "license": "MIT",
+  "icon": "resources/logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asmirbe/solwind"
+  },
+  "engines": {
+    "vscode": "^1.73.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:html"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "solwind.refreshSnippets",
+        "title": "Refresh",
+        "icon": "$(refresh)"
       },
-      "views": {
-         "snippets-container": [
-            {
-               "id": "solwind.snippets",
-               "name": "Code manager"
-            }
-         ]
+      {
+        "command": "solwind.generateTemplate",
+        "title": "Generate a template"
       },
-      "menus": {
-         "view/title": [
-            {
-               "command": "solwind.refreshSnippets",
-               "when": "view == solwind.snippets && solwind.apiKeySet",
-               "group": "navigation"
-            },
-            {
-               "command": "solwind.addCategory",
-               "when": "view == solwind.snippets && solwind.apiKeySet",
-               "group": "navigation"
-            }
-         ],
-         "editor/context": [
-            {
-               "command": "solwind.createSnippet",
-               "when": "editorTextFocus && editorHasSelection"
-            }
-         ],
-         "explorer/context": [
-            {
-               "command": "solwind.generateTemplate",
-               "when": "explorerResourceIsFolder && explorerViewletVisible && !explorerResourceReadonly"
-            }
-         ],
-         "view/item/context": [
-            {
-               "command": "solwind.deleteCategory",
-               "when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
-               "group": "inline"
-            },
-            {
-               "command": "solwind.renameCategory",
-               "when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
-               "group": "inline"
-            },
-            {
-               "command": "solwind.renameSubcategory",
-               "when": "view == solwind.snippets && viewItem == subcategory && solwind.apiKeySet",
-               "group": "inline"
-            },
-            {
-               "command": "solwind.deleteSubcategory",
-               "when": "view == solwind.snippets && viewItem == subcategory && solwind.apiKeySet",
-               "group": "inline"
-            },
-            {
-               "command": "solwind.addSubcategory",
-               "when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
-               "group": "inline"
-            },
-            {
-               "command": "solwind.deleteSnippet",
-               "when": "view == solwind.snippets && viewItem == snippet && solwind.apiKeySet",
-               "group": "inline"
-            }
-         ]
+      {
+        "command": "solwind.editSnippet",
+        "icon": "$(whole-word)",
+        "title": "Edit"
+      },
+      {
+        "command": "solwind.deleteSnippet",
+        "icon": "$(trash)",
+        "title": "Delete"
+      },
+      {
+        "command": "solwind.renameCategory",
+        "icon": "$(whole-word)",
+        "title": "Rename"
+      },
+      {
+        "command": "solwind.addSubcategory",
+        "title": "Add Subcategory",
+        "icon": "$(add)"
+      },
+      {
+        "command": "solwind.renameSubcategory",
+        "icon": "$(whole-word)",
+        "title": "Rename"
+      },
+      {
+        "command": "solwind.deleteSubcategory",
+        "icon": "$(trash)",
+        "title": "Delete"
+      },
+      {
+        "command": "solwind.createSnippet",
+        "title": "Add to solwind",
+        "icon": "$(add)",
+        "category": "Solwind"
+      },
+      {
+        "command": "solwind.addCategory",
+        "title": "Add Category",
+        "icon": "$(add)"
+      },
+      {
+        "command": "solwind.deleteCategory",
+        "icon": "$(trash)",
+        "title": "Delete"
+      },
+      {
+        "command": "solwind.setApiKey",
+        "title": "Set API Key",
+        "category": "Solwind Authentication",
+        "enablement": "!solwind.apiKeySet"
+      },
+      {
+        "command": "solwind.deleteApiKey",
+        "title": "Clear API Key",
+        "category": "Solwind Authentication",
+        "enablement": "solwind.apiKeySet"
       }
-   },
-   "main": "./out/extension.js",
-   "scripts": {
-      "compile": "node ./esbuild.js",
-      "watch": "node ./esbuild.js --watch",
-      "lint": "eslint src --ext ts",
-      "build:production": "NODE_ENV=production node ./esbuild.js",
-      "build:publish": "NODE_ENV=publish node ./esbuild.js && vsce package",
-      "prettier": "prettier --write src/**/*.ts"
-   },
-   "devDependencies": {
-      "@types/node": "^18",
-      "@types/vscode": "^1.73.0",
-      "@types/vscode-webview": "^1.57.5",
-      "@typescript-eslint/eslint-plugin": "^6.7.0",
-      "@typescript-eslint/parser": "^6.7.0",
-      "@vscode/webview-ui-toolkit": "^1.4.0",
-      "autoprefixer": "^10.4.19",
-      "esbuild": "^0.21.5",
-      "esbuild-plugin-copy": "^2.1.1",
-      "esbuild-sass-plugin": "^3.3.1",
-      "eslint": "^8.26.0",
-      "postcss": "^8.4.38",
-      "prettier": "^2.8.1",
-      "typescript": "^5.4.2"
-   },
-   "dependencies": {
-      "node-html-parser": "^6.1.13",
-      "pocketbase": "^0.21.3"
-   }
+    ],
+    "viewsWelcome": [
+      {
+        "view": "solwind.snippets",
+        "contents": "Welcome to the Solwind extension! To get started, you need to set your API key.\n\n[Set API Key](command:solwind.setApiKey \"Setting the API key is mandatory\")\n\nOnce the API key is set, you will have access to all the features of this extension.",
+        "when": "!solwind.apiKeySet"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "snippets-container",
+          "title": "Solwind",
+          "icon": "./resources/logo.svg"
+        }
+      ]
+    },
+    "views": {
+      "snippets-container": [
+        {
+          "id": "solwind.snippets",
+          "name": "Code manager"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "solwind.refreshSnippets",
+          "when": "view == solwind.snippets && solwind.apiKeySet",
+          "group": "navigation"
+        },
+        {
+          "command": "solwind.addCategory",
+          "when": "view == solwind.snippets && solwind.apiKeySet",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "solwind.createSnippet",
+          "when": "editorTextFocus && editorHasSelection"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "solwind.generateTemplate",
+          "when": "explorerResourceIsFolder && explorerViewletVisible && !explorerResourceReadonly"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "solwind.deleteCategory",
+          "when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
+          "group": "inline"
+        },
+        {
+          "command": "solwind.renameCategory",
+          "when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
+          "group": "inline"
+        },
+        {
+          "command": "solwind.renameSubcategory",
+          "when": "view == solwind.snippets && viewItem == subcategory && solwind.apiKeySet",
+          "group": "inline"
+        },
+        {
+          "command": "solwind.deleteSubcategory",
+          "when": "view == solwind.snippets && viewItem == subcategory && solwind.apiKeySet",
+          "group": "inline"
+        },
+        {
+          "command": "solwind.addSubcategory",
+          "when": "view == solwind.snippets && viewItem == category && solwind.apiKeySet",
+          "group": "inline"
+        },
+        {
+          "command": "solwind.deleteSnippet",
+          "when": "view == solwind.snippets && viewItem == snippet && solwind.apiKeySet",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "main": "./out/extension.js",
+  "scripts": {
+    "compile": "node ./esbuild.js",
+    "watch": "node ./esbuild.js --watch",
+    "lint": "eslint src --ext ts",
+    "build:production": "NODE_ENV=production node ./esbuild.js",
+    "build:publish": "NODE_ENV=publish node ./esbuild.js && vsce package",
+    "prettier": "prettier --write src/**/*.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "@types/vscode": "^1.73.0",
+    "@types/vscode-webview": "^1.57.5",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "autoprefixer": "^10.4.19",
+    "esbuild": "^0.21.5",
+    "esbuild-plugin-copy": "^2.1.1",
+    "esbuild-sass-plugin": "^3.3.1",
+    "eslint": "^8.26.0",
+    "postcss": "^8.4.38",
+    "prettier": "^2.8.1",
+    "typescript": "^5.4.2"
+  },
+  "dependencies": {
+    "node-html-parser": "^6.1.13",
+    "pocketbase": "^0.21.3"
+  }
 }

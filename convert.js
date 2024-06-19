@@ -1,5 +1,4 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-vars-requires */
+/* eslint-disable */
 const fs = require('fs');
 const path = require('path');
 const htmlParser = require('node-html-parser');
