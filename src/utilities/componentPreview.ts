@@ -1,6 +1,5 @@
-import { getTailwindConfig } from "../pocketbase/pocketbase";
 
-export const baseHTML = (fileContent: string, tailwindConfig: string) => {
+export const componentPreview = (fileContent: string, tailwindConfig: string) => {
 	return `<html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -12,9 +11,10 @@ export const baseHTML = (fileContent: string, tailwindConfig: string) => {
 			${tailwindConfig}
 		</script>
 	</head>
-	<body>
-		<!-- Body content -->
-		${fileContent}
+	<body class="flex items-center justify-center h-screen">
+		<div>
+			${fileContent}
+		</div>
 	</body>
 </html>
 `;

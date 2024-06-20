@@ -34,6 +34,18 @@ function main() {
 
    const cancelButton = document.getElementById("cancel-button") as Button;
    cancelButton.addEventListener("click", () => vscode.postMessage({command: "cancel"}));
+
+   const preview = document.getElementById("code") as HTMLElement;
+   preview.addEventListener("dblclick", (event) => {
+      const target = event.target as HTMLElement;
+      const pre = target.closest("pre");
+      console.log(pre);
+
+      if (pre) {
+         pre.style.maxHeight = pre.style.maxHeight === "min-content" ? "300px" : "min-content";
+         pre.style.height = "min-content";
+      }
+   });
 }
 
 let openedSnippet: Snippet = {

@@ -196,3 +196,9 @@ export async function createSubcategory(categoryId: string, name: string) {
 
    await pb.collection("subcategories").create(subcategoryData);
 }
+
+
+export async function getTailwindConfig() {
+	const tailwindConfig = await pb.collection("config").getOne("oi4d8p2kxxrse9d");
+	return tailwindConfig.value;
+}

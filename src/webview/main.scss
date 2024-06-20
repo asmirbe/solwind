@@ -2,19 +2,19 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+   box-sizing: border-box;
 }
 #webview-body {
-  display: flex;
-  flex-direction: column;
+   display: flex;
+   flex-direction: column;
 }
 // mixin generate spacing class mt = margin-top, mb = margin-bottom, ml = margin-left, mr = margin-right from 0 with 0.25rem increment to 10rem
 @mixin generate-spacing-class($direction, $property) {
-  @for $i from 0 through 10 {
-    .#{$direction}-#{$i} {
-      #{$property}: #{$i * 0.5}rem;
-    }
-  }
+   @for $i from 0 through 10 {
+      .#{$direction}-#{$i} {
+         #{$property}: #{$i * 0.5}rem;
+      }
+   }
 }
 // generate spacing class
 @include generate-spacing-class(mt, margin-top);
@@ -23,71 +23,135 @@
 @include generate-spacing-class(mr, margin-right);
 
 #snippets-form {
-  display: grid;
-  grid-auto-flow: row;
-  grid-row-gap: 1rem;
+   display: flex;
+   max-width: 1024px;
+   flex-direction: column;
+   grid-row-gap: 1rem;
 }
 
 #submit-button,
 #delete-button {
-  width: fit-content;
+   width: fit-content;
 }
 
 @media screen and (min-width: 1024px) {
-  #webview-body {
-    padding: 0 8rem;
-    max-width: 1024px;
-    margin: 0 auto;
-  }
+   #webview-body {
+      padding: 0 8rem;
+      max-width: 1024px;
+      margin: 0 auto;
+   }
 }
 p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.3;
+   margin: 0;
+   font-size: 13px;
+   line-height: 1.3;
 }
 span.tag {
-  font-size: inherit;
-  padding: 2px 4px;
-  border-radius: 4px;
-  color: var(--input-foreground);
-  height: calc(var(--input-height) * 1px);
-  min-width: var(--input-min-width);
-  background: var(--input-background);
+   font-size: inherit;
+   padding: 2px 4px;
+   border-radius: 4px;
+   color: var(--input-foreground);
+   height: calc(var(--input-height) * 1px);
+   min-width: var(--input-min-width);
+   background: var(--input-background);
 }
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
 }
 .inline-container {
-  display: flex;
-  gap: 1rem;
+   display: flex;
+   gap: 1rem;
 }
 .grid--2 {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr 1fr;
+   display: grid;
+   gap: 1rem;
+   grid-template-columns: 1fr 1fr;
 }
 
 .dropdown-container {
-  box-sizing: border-box;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: flex-start;
-  justify-content: flex-start;
+   box-sizing: border-box;
+   display: flex;
+   flex-flow: column nowrap;
+   align-items: flex-start;
+   justify-content: flex-start;
 
-  vscode-dropdown {
-    width: 100%;
+   vscode-dropdown {
+      width: 100%;
 
-    option {
-      font-size: var(--type-ramp-base-font-size);
-      line-height: var(--type-ramp-base-line-height);
-      min-height: 100%;
-      padding: 2px 6px 2px 8px;
+      option {
+         font-size: var(--type-ramp-base-font-size);
+         line-height: var(--type-ramp-base-line-height);
+         min-height: 100%;
+         padding: 2px 6px 2px 8px;
 
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.15);
+         &:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+         }
       }
-    }
-  }
+   }
+}
+label {
+   display: block;
+   color: var(--foreground);
+   cursor: pointer;
+   font-size: var(--type-ramp-base-font-size);
+   line-height: var(--type-ramp-base-line-height);
+   margin-bottom: 2px;
+}
+#preview {
+   position: relative;
+   z-index: 1;
+   margin: 0;
+   width: 100%;
+   min-height: 200px;
+   background: transparent;
+   overflow-x: auto;
+   max-width: 100%;
+   border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
+   background: var(--input-background);
+}
+pre.shiki {
+   position: relative;
+   z-index: 1;
+   margin: 0;
+   background: transparent;
+   overflow-x: auto;
+   overflow-y: hidden;
+   height: min-content;
+   max-height: 20vh;
+   max-width: 100%;
+   border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
+   background: var(--input-background) !important;
+   code {
+      display: block;
+      padding: 14px;
+      counter-reset: step;
+      counter-increment: step 0;
+      line-height: 1.7;
+      width: fit-content;
+      background: var(--input-background);
+      min-width: 100%;
+      font-family: "Geist Mono", "IBM Plex Mono", Menlo, monospace, Consolas, "Courier New",
+         monospace;
+      span {
+         font-style: normal !important;
+         &::selection {
+            background: #666666;
+         }
+      }
+      .line:not(:last-child)::before {
+         content: counter(step);
+         counter-increment: step;
+         width: 1rem;
+         margin-right: 1.5rem;
+         display: inline-block;
+         text-align: right;
+         color: rgba(115, 138, 148, 0.4);
+      }
+      &::selection {
+         background: #666666;
+      }
+   }
 }

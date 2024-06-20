@@ -6,7 +6,7 @@ import { baseHTML } from "./utilities/baseHTML";
 import { commands, ExtensionContext, window, ViewColumn, Uri, TreeItem, extensions } from "vscode";
 import SnippetsDataProvider from "./providers/SnippetsDataProvider";
 import HTMLCompletionProvider from "./providers/HTMLCompletionProvider";
-import { pb, createSubcategory, CustomAuthStore } from "./pocketbase/pocketbase";
+import { pb, createSubcategory, CustomAuthStore, getTailwindConfig } from "./pocketbase/pocketbase";
 import { getWebviewContent } from "./ui/getWebviewContent";
 import { promptForCategory, promptForSubcategory, renamePrompt } from "./utilities/prompts";
 import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
@@ -171,7 +171,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		}
 	});
 
-	const openSnippet = commands.registerCommand("solwind.openSnippet", () => {
+	const openSnippet = commands.registerCommand("solwind.openSnippet", async () => {
 		const selectedTreeViewItem = treeView.selection[0];
 		const matchingSnippet = snippetsDataProvider.snippets.find(
 			(x) => x.id === selectedTreeViewItem.id
@@ -196,7 +196,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 
 		panel.title = matchingSnippet.name;
 		panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
-		panel.webview.html = getWebviewContent(
+		panel.webview.html = await getWebviewContent(
 			panel.webview,
 			context.extensionUri,
 			matchingSnippet,
@@ -204,7 +204,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			snippetsDataProvider.subcategories
 		);
 
-		panel.webview.onDidReceiveMessage((message: any) => {
+		panel.webview.onDidReceiveMessage(async (message: any) => {
 			const command = message.command;
 			const snippet = message.snippet;
 
@@ -214,7 +214,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 					snippetsDataProvider.refresh();
 					if (panel) {
 						panel.title = snippet.name;
-						panel.webview.html = getWebviewContent(
+						panel.webview.html = await getWebviewContent(
 							panel.webview,
 							context.extensionUri,
 							snippet,
@@ -222,6 +222,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 							snippetsDataProvider.subcategories
 						);
 					}
+					window.showInformationMessage("Snippet updated successfully!");
 					break;
 				case "cancel":
 					panel.dispose();
@@ -278,6 +279,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 						if (selectedTemplate) {
 							const fileName = selectedTemplate.name;
 							const fileContent = selectedTemplate.content;
+							const tailwindConfig = await getTailwindConfig();
 
 							const filePath = path.join(folderUri.fsPath, "index.html");
 
@@ -293,7 +295,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 									"No"
 								);
 								if (overwrite === "No" || !overwrite || overwrite === undefined) return;
-								await fs.promises.writeFile(filePath, baseHTML(fileContent), {
+								await fs.promises.writeFile(filePath, baseHTML(fileContent, tailwindConfig), {
 									encoding: "utf8",
 									flag: "w",
 								});
@@ -301,7 +303,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 									`Template '${fileName}' generated successfully!`
 								);
 							} else {
-								await fs.promises.writeFile(filePath, baseHTML(fileContent), {
+								await fs.promises.writeFile(filePath, baseHTML(fileContent, tailwindConfig), {
 									encoding: "utf8",
 									flag: "w",
 								});

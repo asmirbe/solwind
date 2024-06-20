@@ -1,40 +1,63 @@
-import {Webview, Uri} from "vscode";
-import {Snippet} from "../types/Snippet";
-import {getUri} from "../utilities/getUri";
-import {getNonce} from "../utilities/getNonce";
-import {escapeHtml} from "../utilities/escapeHtml";
-import {Category, Subcategory} from "../types/Category";
+import { Webview, Uri } from "vscode";
+import { Snippet } from "../types/Snippet";
+import { getUri } from "../utilities/getUri";
+import { getNonce } from "../utilities/getNonce";
+import { Category, Subcategory } from "../types/Category";
+import { codeToHtml, getHighlighter } from 'shiki';
+import { componentPreview } from "../utilities/componentPreview";
+import { getTailwindConfig } from "../pocketbase/pocketbase";
 
-export function getWebviewContent(
-   webview: Webview,
-   extensionUri: Uri,
-   snippet: Snippet,
-   categories: Category[],
-   subcategories: Subcategory[]
+async function renderCodeToHtml(code: string) {
+	const highlighter = await getHighlighter({
+		themes: ['aurora-x'],
+		langs: ['javascript', 'html'], // Include both languages
+	});
+	return highlighter.codeToHtml(code, {
+		theme: 'aurora-x',
+		lang: 'html',
+	});
+}
+
+const getGeneratedPageURL = (html: string, config: any) => {
+	const baseHtml = componentPreview(html, config);
+	return `data:text/html;charset=utf-8,${encodeURIComponent(baseHtml)}`;
+};
+
+export async function getWebviewContent(
+	webview: Webview,
+	extensionUri: Uri,
+	snippet: Snippet,
+	categories: Category[],
+	subcategories: Subcategory[]
 ) {
-   const webviewUri = getUri(webview, extensionUri, ["out", "main.js"]);
-   const styleUri = getUri(webview, extensionUri, ["out", "main.css"]);
-   const nonce = getNonce();
+	const tailwindConfig = await getTailwindConfig();
 
-   const safeInsertText = escapeHtml(snippet.insertText);
+	const webviewUri = getUri(webview, extensionUri, ["out", "main.js"]);
+	const styleUri = getUri(webview, extensionUri, ["out", "main.css"]);
+	const nonce = getNonce();
 
-   webview.onDidReceiveMessage((message) => {
-      const command = message.command;
-      switch (command) {
-         case "requestSnippetData":
-            webview.postMessage({
-               command: "receiveDataInWebview",
-               payload: JSON.stringify({
-                  snippet: snippet,
-                  categories: categories,
-                  subcategories: subcategories,
-               }),
-            });
-            break;
-      }
-   });
+	const highlightedCodeHtml = await renderCodeToHtml(snippet.insertText); // Assuming snippet.insertText is your code
+	const previewHtml = getGeneratedPageURL(snippet.insertText, tailwindConfig);  // This now returns URI encoded HTML
 
-   return /*html*/ `<!DOCTYPE html>
+
+
+	webview.onDidReceiveMessage((message) => {
+		const command = message.command;
+		switch (command) {
+			case "requestSnippetData":
+				webview.postMessage({
+					command: "receiveDataInWebview",
+					payload: JSON.stringify({
+						snippet: snippet,
+						categories: categories,
+						subcategories: subcategories,
+					}),
+				});
+				break;
+		}
+	});
+
+	return /*html*/ `<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="UTF-8" />
@@ -59,15 +82,23 @@ export function getWebviewContent(
 				</p>
 			</div>
 			<vscode-text-area id="documentation" value="${snippet.description}" placeholder="Write your documentation here" resize="none" rows="2">Documentation</vscode-text-area>
-			<vscode-text-area id="insertText" readonly value="${safeInsertText}" placeholder="Provide your code here" resize="none" rows="10">Snippet code</vscode-text-area>
+			<div id="code">
+				<label>Code</label>
+				${highlightedCodeHtml}
+				</div>
+			<div>
+			<label>Preview</label>
+			<iframe id="preview" src="${previewHtml}" sandbox="allow-scripts allow-same-origin">
+			</iframe>
+			</div>
 			<div class="grid--2">
 				<div class="dropdown-container">
 					<label for="category">Category</label>
-					<vscode-dropdown id="category" position="below"></vscode-dropdown>
+					<vscode-dropdown id="category" position="above"></vscode-dropdown>
 				</div>
 				<div class="dropdown-container">
 					<label for="subcategory">Subcategory</label>
-					<vscode-dropdown id="subcategory" position="below"></vscode-dropdown>
+					<vscode-dropdown id="subcategory" position="above"></vscode-dropdown>
 				</div>
 			</div>
 			<div class="inline-container">

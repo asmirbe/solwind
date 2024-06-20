@@ -204,6 +204,7 @@
     "eslint": "^8.26.0",
     "postcss": "^8.4.38",
     "prettier": "^2.8.1",
+    "shiki": "^1.7.0",
     "typescript": "^5.4.2"
   },
   "dependencies": {
