@@ -1,4 +1,5 @@
 /* eslint-disable */
+/* ts-ignore */
 const {build, context} = require("esbuild");
 const {copy} = require("esbuild-plugin-copy");
 const sassPlugin = require("esbuild-sass-plugin").sassPlugin;
