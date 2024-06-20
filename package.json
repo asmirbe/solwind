@@ -2,7 +2,7 @@
   "name": "solwind",
   "displayName": "Solwind",
   "description": "Solwind is a code snippet manager that allows you to save and reuse your code snippets.",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "publisher": "asmirbe",
   "private": true,
   "license": "MIT",
