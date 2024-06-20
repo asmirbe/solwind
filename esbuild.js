@@ -1,12 +1,12 @@
 /* eslint-disable */
-const { build, context } = require("esbuild");
-const { copy } = require("esbuild-plugin-copy");
+const {build, context} = require("esbuild");
+const {copy} = require("esbuild-plugin-copy");
 const sassPlugin = require("esbuild-sass-plugin").sassPlugin;
 const autoprefixer = require("autoprefixer");
 const postcss = require("postcss");
 const PocketBase = require("pocketbase/cjs");
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 //@ts-check
 /** @typedef {import('esbuild').BuildOptions} BuildOptions **/
@@ -41,7 +41,7 @@ const webviewConfig = {
    plugins: [
       sassPlugin({
          async transform(source) {
-            const { css } = await postcss([autoprefixer]).process(source, { from: undefined });
+            const {css} = await postcss([autoprefixer]).process(source, {from: undefined});
             return css;
          },
       }),
@@ -64,7 +64,7 @@ async function watch(config) {
 
 // Function to update the version field in PocketBase
 async function updateVersionInPocketBase(newVersion) {
-   const pb = new PocketBase("https://pocketbase-hhnt-production.up.railway.app");
+   const pb = new PocketBase("https://solwind.up.railway.app");
 
    try {
       // Authenticate as admin
@@ -74,7 +74,7 @@ async function updateVersionInPocketBase(newVersion) {
       const record = await pb.collection("version").getOne("yr0aiacmjhc5jz0");
 
       // Update the collection with the new version
-      const data = { version: newVersion };
+      const data = {version: newVersion};
       await pb.collection("version").update("yr0aiacmjhc5jz0", data);
       console.log("PocketBase version updated successfully");
    } catch (error) {
@@ -95,7 +95,7 @@ function updatePackageJsonVersion(newVersion) {
 
 // Function to increment version by 0.0.1
 function incrementVersion(version) {
-   const parts = version.split('.').map(Number);
+   const parts = version.split(".").map(Number);
    parts[2] += 1;
    if (parts[2] >= 10) {
       parts[2] = 0;
@@ -105,7 +105,7 @@ function incrementVersion(version) {
          parts[0] += 1;
       }
    }
-   return parts.join('.');
+   return parts.join(".");
 }
 
 // Build script

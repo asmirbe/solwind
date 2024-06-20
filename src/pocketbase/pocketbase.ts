@@ -4,7 +4,7 @@ const PocketBase = require("pocketbase/cjs");
 import {Category, Subcategory} from "../types/Category";
 import {getGlobalContext} from "../context/globalContext";
 
-export const pb = new PocketBase("https://pocketbase-hhnt-production.up.railway.app/", {
+export const pb = new PocketBase("https://solwind.up.railway.app/", {
    requestTimeout: 30000,
 });
 
