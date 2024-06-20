@@ -6,12 +6,12 @@ export const componentPreview = (fileContent: string, tailwindConfig: string) =>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Document</title>
 		<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-		<script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+		<script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,container-queries"></script>
 		<script>
 			${tailwindConfig}
 		</script>
 	</head>
-	<body class="flex items-center justify-center h-screen">
+	<body class="bg-white p-8">
 		<div>
 			${fileContent}
 		</div>

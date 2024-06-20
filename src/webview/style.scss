@@ -1,3 +1,4 @@
+@import "../../node_modules/@vscode/codicons/dist/codicon.css";
 @import "theme";
 *,
 *::before,
@@ -45,13 +46,16 @@ p {
    margin: 0;
    font-size: 13px;
    line-height: 1.3;
+   small {
+      display: flex;
+      align-items: center;
+   }
 }
 span.tag {
    font-size: inherit;
    padding: 2px 4px;
    border-radius: 4px;
    color: var(--input-foreground);
-   height: calc(var(--input-height) * 1px);
    min-width: var(--input-min-width);
    background: var(--input-background);
 }
@@ -100,18 +104,7 @@ label {
    line-height: var(--type-ramp-base-line-height);
    margin-bottom: 2px;
 }
-#preview {
-   position: relative;
-   z-index: 1;
-   margin: 0;
-   width: 100%;
-   min-height: 200px;
-   background: transparent;
-   overflow-x: auto;
-   max-width: 100%;
-   border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
-   background: var(--input-background);
-}
+
 pre.shiki {
    position: relative;
    z-index: 1;
@@ -120,7 +113,7 @@ pre.shiki {
    overflow-x: auto;
    overflow-y: hidden;
    height: min-content;
-   max-height: 20vh;
+   max-height: 15vh;
    max-width: 100%;
    border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
    background: var(--input-background) !important;
@@ -133,8 +126,8 @@ pre.shiki {
       width: fit-content;
       background: var(--input-background);
       min-width: 100%;
-      font-family: "Geist Mono", "IBM Plex Mono", Menlo, monospace, Consolas, "Courier New",
-         monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono,
+         Courier New, monospace, monospace;
       span {
          font-style: normal !important;
          &::selection {
@@ -148,7 +141,7 @@ pre.shiki {
          margin-right: 1.5rem;
          display: inline-block;
          text-align: right;
-         color: rgba(115, 138, 148, 0.4);
+         color: var(--dropdown-border);
       }
       &::selection {
          background: #666666;

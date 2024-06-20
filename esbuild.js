@@ -29,6 +29,11 @@ const extensionConfig = {
    entryPoints: ["./src/extension.ts"],
    outfile: "./out/extension.js",
    external: ["vscode"],
+	loader: {
+      '.woff': 'file',
+      '.ttf': 'file',
+      '.otf': 'file',
+   },
 };
 
 // Config for webview source code (to be run in a web-based context)
@@ -37,7 +42,7 @@ const webviewConfig = {
    ...baseConfig,
    target: "es2020",
    format: "esm",
-   entryPoints: ["./src/webview/main.ts", "./src/webview/main.scss"],
+   entryPoints: ["./src/webview/main.ts", "./src/webview/style.scss"],
    outdir: "./out",
    plugins: [
       sassPlugin({
@@ -54,6 +59,11 @@ const webviewConfig = {
          },
       }),
    ],
+	loader: {
+      '.woff': 'file',
+      '.ttf': 'file',
+      '.otf': 'file',
+   },
 };
 
 // Watch configuration for `context` API

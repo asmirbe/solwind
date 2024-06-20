@@ -118,7 +118,8 @@
       "snippets-container": [
         {
           "id": "solwind.snippets",
-          "name": "Code manager"
+          "name": "Code manager",
+			 "icon": "./resources/logo.svg"
         }
       ]
     },
@@ -187,7 +188,7 @@
     "watch": "node ./esbuild.js --watch",
     "lint": "eslint src --ext ts",
     "build:production": "NODE_ENV=production node ./esbuild.js",
-    "build:publish": "NODE_ENV=publish node ./esbuild.js && vsce package",
+    "build:publish": "NODE_ENV=publish node ./esbuild.js && vsce package -o ./build",
     "prettier": "prettier --write src/**/*.ts"
   },
   "devDependencies": {
@@ -208,6 +209,11 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "@hey-web-components/monaco-editor": "^0.4.3",
+    "@shikijs/monaco": "^1.7.0",
+    "@vscode/codicons": "^0.0.36",
+    "monaco-editor": "^0.50.0",
+    "monaco-editor-core": "^0.50.0",
     "node-html-parser": "^6.1.13",
     "pocketbase": "^0.21.3"
   }

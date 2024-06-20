@@ -3,7 +3,7 @@ import * as path from "path";
 
 import { baseHTML } from "./utilities/baseHTML";
 
-import { commands, ExtensionContext, window, ViewColumn, Uri, TreeItem, extensions } from "vscode";
+import { commands, ExtensionContext, window, ViewColumn, Uri, TreeItem, extensions, WebviewPanel } from "vscode";
 import SnippetsDataProvider from "./providers/SnippetsDataProvider";
 import HTMLCompletionProvider from "./providers/HTMLCompletionProvider";
 import { pb, createSubcategory, CustomAuthStore, getTailwindConfig } from "./pocketbase/pocketbase";
@@ -12,6 +12,7 @@ import { promptForCategory, promptForSubcategory, renamePrompt } from "./utiliti
 import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
 import { setApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
+import { Snippet } from "./types/Snippet";
 
 export async function activate(context: ExtensionContext) {
 	// Get actual extension version
@@ -66,7 +67,7 @@ export async function activate(context: ExtensionContext) {
 // Extension init
 async function initializeExtension(context: ExtensionContext, authStore: CustomAuthStore) {
 	const snippetsDataProvider = new SnippetsDataProvider();
-	let panel: any | undefined = undefined;
+	const panelMap = new Map<string, WebviewPanel>();
 
 	const treeView = window.createTreeView("solwind.snippets", {
 		treeDataProvider: snippetsDataProvider,
@@ -171,69 +172,91 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		}
 	});
 
-	const openSnippet = commands.registerCommand("solwind.openSnippet", async () => {
-		const selectedTreeViewItem = treeView.selection[0];
-		const matchingSnippet = snippetsDataProvider.snippets.find(
-			(x) => x.id === selectedTreeViewItem.id
-		);
+	const openSnippet = commands.registerCommand("solwind.openSnippet", async (snippet: Snippet) => {
+		let panel = panelMap.get(snippet.id);
 
-		if (!matchingSnippet) {
-			window.showErrorMessage("No matching snippet found");
-			return;
-		}
-
-		if (!panel) {
+		if (panel) {
+			panel.reveal(ViewColumn.One);
+		} else {
 			panel = window.createWebviewPanel(
 				"snippetDetailView",
-				matchingSnippet.name,
+				snippet.name,
 				ViewColumn.One,
 				{
 					enableScripts: true,
 					localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
-				}
+				},
 			);
+
+			panelMap.set(snippet.id, panel);
+
+			panel.onDidDispose(() => {
+				panelMap.delete(snippet.id);
+			});
+
+			await loadWebviewContent(panel, snippet);
 		}
 
-		panel.title = matchingSnippet.name;
-		panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
-		panel.webview.html = await getWebviewContent(
-			panel.webview,
-			context.extensionUri,
-			matchingSnippet,
-			snippetsDataProvider.categories,
-			snippetsDataProvider.subcategories
-		);
-
-		panel.webview.onDidReceiveMessage(async (message: any) => {
-			const command = message.command;
-			const snippet = message.snippet;
-
-			switch (command) {
-				case "updateSnippet":
-					pb.collection("snippets").update(snippet.id, snippet);
-					snippetsDataProvider.refresh();
-					if (panel) {
-						panel.title = snippet.name;
-						panel.webview.html = await getWebviewContent(
-							panel.webview,
-							context.extensionUri,
-							snippet,
-							snippetsDataProvider.categories,
-							snippetsDataProvider.subcategories
-						);
-					}
-					window.showInformationMessage("Snippet updated successfully!");
-					break;
-				case "cancel":
-					panel.dispose();
-					break;
-			}
-		});
-
-		panel.onDidDispose(() => {
-			panel = undefined;
-		});
+		// Ensure the icon path is set correctly
+		try {
+			panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
+		} catch (error) {
+			console.error("Failed to set icon path:", error);
+		}
 	});
+
+	async function loadWebviewContent(panel: WebviewPanel, snippet: Snippet) {
+		try {
+			const webviewContent = await getWebviewContent(
+				panel.webview,
+				context.extensionUri,
+				snippet,
+				snippetsDataProvider.categories,
+				snippetsDataProvider.subcategories
+			);
+
+			panel.webview.html = webviewContent;
+
+			const messageHandler = async (message: any) => {
+				const command = message.command;
+				const snippet = message.snippet;
+
+				switch (command) {
+					case "updateSnippet":
+						if (!snippet.id) break;
+						console.log('before update', snippet);
+						try {
+							await pb.collection("snippets").update(snippet.id, snippet);
+							snippetsDataProvider.refresh();
+							if (panel) {
+								panel.title = snippet.name;
+								panel.webview.html = await getWebviewContent(
+									panel.webview,
+									context.extensionUri,
+									snippet,
+									snippetsDataProvider.categories,
+									snippetsDataProvider.subcategories
+								);
+							}
+							window.showInformationMessage("Snippet updated successfully!");
+						} catch (error) {
+							console.error("Failed to update snippet:", error);
+						}
+						break;
+					case "cancel":
+						panel.dispose();
+						break;
+				}
+			};
+
+			panel.webview.onDidReceiveMessage(messageHandler);
+
+			panel.onDidDispose(() => {});
+		} catch (error) {
+			console.error("Failed to load webview content:", error);
+		}
+	}
+
 
 	const deleteSnippet = commands.registerCommand(
 		"solwind.deleteSnippet",
@@ -249,6 +272,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				window.showInformationMessage(`Successfully deleted!`);
 				await snippetsDataProvider.refresh();
 
+				const panel = panelMap.get(item.id!);
 				panel?.dispose();
 			} catch (error) {
 				console.error("Error deleting snippet:", error);

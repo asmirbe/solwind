@@ -1,3 +1,7 @@
+// Types
+import {Snippet} from "../types/Snippet";
+import {Category, Subcategory} from "../types/Category";
+import { pb } from "../pocketbase/pocketbase";
 import {
    provideVSCodeDesignSystem,
    Button,
@@ -9,10 +13,6 @@ import {
    vsCodeDropdown,
    vsCodeOption,
 } from "@vscode/webview-ui-toolkit";
-import {Snippet} from "../types/Snippet";
-import {Category, Subcategory} from "../types/Category";
-import {capitalizeFirstLetter, formatLabel} from "../utilities/stringUtils";
-
 provideVSCodeDesignSystem().register(
    vsCodeButton(),
    vsCodeTextArea(),
@@ -21,8 +21,18 @@ provideVSCodeDesignSystem().register(
    vsCodeOption()
 );
 
-const vscode = acquireVsCodeApi();
+// Utilities
+import {capitalizeFirstLetter, formatLabel} from "../utilities/stringUtils";
 
+// Custom components
+import CodeIcon from "./components/CodeIcon";
+import ComponentPreview from "./components/ComponentPreview";
+
+customElements.define('code-icon', CodeIcon);
+customElements.define('component-preview', ComponentPreview);
+
+const vscode = acquireVsCodeApi();
+let isSaving = false;
 window.addEventListener("load", main);
 
 function main() {
@@ -33,16 +43,19 @@ function main() {
    saveButton.addEventListener("click", () => saveSnippet());
 
    const cancelButton = document.getElementById("cancel-button") as Button;
-   cancelButton.addEventListener("click", () => vscode.postMessage({command: "cancel"}));
+   cancelButton.addEventListener("click", () => {
+		if (!isSaving) {
+		  vscode.postMessage({ command: "cancel" });
+		}
+	 });
 
    const preview = document.getElementById("code") as HTMLElement;
    preview.addEventListener("dblclick", (event) => {
       const target = event.target as HTMLElement;
       const pre = target.closest("pre");
-      console.log(pre);
 
       if (pre) {
-         pre.style.maxHeight = pre.style.maxHeight === "min-content" ? "300px" : "min-content";
+         pre.style.maxHeight = pre.style.maxHeight === "min-content" ? "20vh" : "min-content";
          pre.style.height = "min-content";
       }
    });
@@ -61,22 +74,23 @@ let dataCategories: Category[] = [];
 let dataSubcategories: Subcategory[] = [];
 
 function setVSCodeMessageListener() {
-   window.addEventListener("message", (event) => {
-      const command = event.data.command;
+	window.addEventListener("message", (event) => {
+	  const command = event.data.command;
 
-      switch (command) {
-         case "receiveDataInWebview": {
-            const {snippet, categories, subcategories} = JSON.parse(event.data.payload);
-            openedSnippet = snippet;
-            dataCategories = categories;
-            dataSubcategories = subcategories;
-            populateDropdowns();
-            break;
-         }
-      }
-   });
-}
-
+	  switch (command) {
+		 case "receiveDataInWebview": {
+			const { snippet, categories, subcategories } = JSON.parse(
+			  event.data.payload
+			);
+			openedSnippet = snippet;
+			dataCategories = categories;
+			dataSubcategories = subcategories;
+			populateDropdowns();
+			break;
+		 }
+	  }
+	});
+ }
 function populateDropdowns() {
    const categoryDropdown = document.getElementById("category") as HTMLSelectElement;
    const subcategoryDropdown = document.getElementById("subcategory") as HTMLSelectElement;
@@ -124,23 +138,26 @@ function filterAndPopulateSubcategories(categoryId: string) {
    }
 }
 
-function saveSnippet() {
-   const nameInput = document.getElementById("name") as TextField;
-   const labelInput = document.getElementById("label") as TextField;
-   const insertText = document.getElementById("insertText") as TextArea;
-   const description = document.getElementById("description") as TextArea;
-   const categoryInput = document.getElementById("category") as HTMLSelectElement;
-   const subcategoryInput = document.getElementById("subcategory") as HTMLSelectElement;
+async function saveSnippet() {
+	if (isSaving) return; // Prevent multiple saves
 
-   const dataToUpdate = {
-      id: openedSnippet.id,
-      name: nameInput?.value,
-      label: formatLabel(labelInput?.value),
-      description: description?.value,
-      insertText: insertText?.value,
-      category: categoryInput?.value,
-      subcategory: subcategoryInput?.value,
-   };
+	const nameInput = document.getElementById("name") as TextField;
+	const labelInput = document.getElementById("label") as TextField;
+	const description = document.getElementById("description") as TextArea;
+	const categoryInput = document.getElementById("category") as HTMLSelectElement;
+	const subcategoryInput = document.getElementById("subcategory") as HTMLSelectElement;
 
-   vscode.postMessage({command: "updateSnippet", snippet: dataToUpdate});
+	const dataToUpdate = {
+		 id: openedSnippet.id,
+		 name: nameInput?.value,
+		 insertText: openedSnippet.insertText,
+		 label: formatLabel(labelInput?.value),
+		 description: description?.value || '',
+		 category: categoryInput?.value,
+		 subcategory: subcategoryInput?.value,
+	};
+
+	isSaving = true;
+	await vscode.postMessage({ command: "updateSnippet", snippet: dataToUpdate });
+	isSaving = false;
 }
