@@ -27,9 +27,11 @@ import {capitalizeFirstLetter, formatLabel} from "../utilities/stringUtils";
 // Custom components
 import CodeIcon from "./components/CodeIcon";
 import ComponentPreview from "./components/ComponentPreview";
+import CodePreview from "./components/CodePreview";
 
 customElements.define('code-icon', CodeIcon);
 customElements.define('component-preview', ComponentPreview);
+customElements.define('code-preview', CodePreview);
 
 const vscode = acquireVsCodeApi();
 let isSaving = false;
@@ -49,16 +51,7 @@ function main() {
 		}
 	 });
 
-   const preview = document.getElementById("code") as HTMLElement;
-   preview.addEventListener("dblclick", (event) => {
-      const target = event.target as HTMLElement;
-      const pre = target.closest("pre");
 
-      if (pre) {
-         pre.style.maxHeight = pre.style.maxHeight === "min-content" ? "20vh" : "min-content";
-         pre.style.height = "min-content";
-      }
-   });
 }
 
 let openedSnippet: Snippet = {

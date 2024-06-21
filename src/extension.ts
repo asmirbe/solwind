@@ -185,6 +185,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				{
 					enableScripts: true,
 					localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
+					retainContextWhenHidden: true
 				},
 			);
 
