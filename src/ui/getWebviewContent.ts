@@ -4,8 +4,8 @@ import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { Category, Subcategory } from "../types/Category";
 import { componentPreview } from "../utilities/componentPreview";
-import { getTailwindConfig } from "../pocketbase/pocketbase";
 import { escapeHtml } from "../utilities/escapeHtml";
+
 const getGeneratedPageURL = (html: string, config: any) => {
 	const baseHtml = componentPreview(html, config);
 	return `data:text/html;charset=utf-8,${encodeURIComponent(baseHtml)}`;
@@ -16,9 +16,9 @@ export async function getWebviewContent(
 	extensionUri: Uri,
 	snippet: Snippet,
 	categories: Category[],
-	subcategories: Subcategory[]
+	subcategories: Subcategory[],
+	tailwindConfig?: any,
 ) {
-	const tailwindConfig = await getTailwindConfig();
 
 	const webviewUri = getUri(webview, extensionUri, ["out", "main.js"]);
 	const styleUri = getUri(webview, extensionUri, ["out", "style.css"]);
@@ -57,9 +57,6 @@ export async function getWebviewContent(
          <title>${snippet.name}</title>
     </head>
     <body id="webview-body">
-         <header>
-              <h1>Editing ${snippet.name}</h1>
-         </header>
          <section id="snippets-form">
             <div class="grid--2">
                       <vscode-text-field id="name" value="${snippet.name}" placeholder="Enter a name">Name</vscode-text-field>
@@ -89,10 +86,13 @@ export async function getWebviewContent(
                          <vscode-dropdown id="subcategory" position="above"></vscode-dropdown>
                     </div>
               </div>
-              <div class="inline-container">
-                    <vscode-button id="submit-button">Save and</vscode-button>
-                    <vscode-button id="cancel-button" appearance="secondary">Cancel</vscode-button>
-              </div>
+              <div id="nav">
+				  		<span>${snippet.name}</span>
+						<div class="inline-container">
+								<vscode-button id="submit-button">Save</vscode-button>
+								<vscode-button id="cancel-button" appearance="secondary">Cancel</vscode-button>
+						</div>
+				  </div>
          </section>
          <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
     </body>

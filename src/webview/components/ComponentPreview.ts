@@ -2,6 +2,7 @@ export default class ComponentPreview extends HTMLElement {
 	private previewHtml: string;
 	private initialX: number;
 	private initialWidth: number;
+	private isDragging: boolean = false;
 
 	constructor(previewHtml: string) {
 		super();
@@ -50,42 +51,43 @@ export default class ComponentPreview extends HTMLElement {
 				min-height: 260px;
 				overflow-x: auto;
 				max-width: 100%;
-				margin-right: 24px;
+				margin-right: var(--size);
 				border: 0;
-				background: var(--input-background);
+				background: white;
 			}
-			.width-option {
+			#width-option {
 				position: absolute;
 				top: 0;
 				right: 0;
 				bottom: 0;
 				height: 100%;
-				display:flex;
+				display: flex;
 				align-items: center;
 				justify-content: center;
-				width: 24px;
-				background: #fff;
-			}
-			.width-option .drag {
-				position: absolute;
-				border-radius: 9999px;
-  				background: rgba(0, 0, 0, .3);
-    			width: 0.375rem;
-				height: 2rem;
-				pointer-event: none;
+				width: var(--size);
 				cursor: ew-resize;
-				z-index: 1;
+				background: var(--input-background);
+				border-radius: calc(var(--corner-radius-round)* 1px);
+			}
+			#width-option svg {
+				height: var(--size);
+				width: var(--size);
 			}
 			#container {
 				display: flex;
 				position: relative;
+				border: calc(var(--border-width)* 1px) solid var(--dropdown-border);
 			}
 		 </style>
 		 <div>
 			<label>Preview</label>
-			<div id="container" style="width: 100%;">
-				<iframe id="preview" src="${this.previewHtml}" sandbox="allow-scripts"></iframe>
-				<div class="width-option"><span class="drag"></span></div>
+			<div id="container" style="width: 100%; --size: 18px;">
+				<iframe id="preview" src="${this.previewHtml}" sandbox="allow-scripts allow-same-origin"></iframe>
+				<div id="width-option">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<path fill="#777" d="M9 19.23q-.508 0-.87-.36q-.36-.362-.36-.87t.36-.87q.362-.36.87-.36t.87.36q.36.362.36.87t-.36.87q-.362.36-.87.36Zm6 0q-.508 0-.87-.36q-.36-.362-.36-.87t.36-.87q.362-.36.87-.36t.87.36q.36.362.36.87t-.36.87q-.362.36-.87.36Zm-6-6q-.508 0-.87-.36q-.36-.362-.36-.87t.36-.87q.362-.36.87-.36t.87.36q.36.362.36.87t-.36.87q-.362.36-.87.36Zm6 0q-.508 0-.87-.36q-.36-.362-.36-.87t.36-.87q.362-.36.87-.36t.87.36q.36.362.36.87t-.36.87q-.362.36-.87.36Zm-6-6q-.508 0-.87-.36q-.36-.362-.36-.87t.36-.87q.362-.36.87-.36t.87.36q.36.362.36.87t-.36.87q-.362.36-.87.36Zm6 0q-.508 0-.87-.36q-.36-.362-.36-.87t.36-.87q.362-.36.87-.36t.87.36q.36.362.36.87t-.36.87q-.362.36-.87.36Z"/>
+					</svg>
+				</div>
 			</div>
 		 </div>
 	  `;
@@ -93,26 +95,41 @@ export default class ComponentPreview extends HTMLElement {
 
 
 	private addEventListeners() {
-		const widthOption = this.shadowRoot?.querySelector('.width-option');
+		const widthOption = this.shadowRoot?.getElementById('width-option');
+		widthOption?.addEventListener('dblclick', () => {
+			const container = this.shadowRoot?.getElementById('container') as HTMLDivElement;
+			if (container.style.width !== '100%') container.style.width = '100%';
+		});
 		widthOption?.addEventListener('mousedown', this.initDrag.bind(this));
+		document.addEventListener('mousemove', this.doDrag.bind(this));
+		document.addEventListener('mouseup', this.stopDrag.bind(this));
+		document.addEventListener('mouseleave', this.stopDrag.bind(this));
 	}
 
 	private removeEventListeners() {
-		const widthOption = this.shadowRoot?.querySelector('.width-option');
+		const widthOption = this.shadowRoot?.getElementById('width-option');
 		widthOption?.removeEventListener('mousedown', this.initDrag.bind(this));
+		document.removeEventListener('mousemove', this.doDrag.bind(this));
+		document.removeEventListener('mouseup', this.stopDrag.bind(this));
+		document.removeEventListener('mouseleave', this.stopDrag.bind(this));
 	}
 
 	private initDrag(event: MouseEvent) {
 		event.preventDefault();
+		this.isDragging = true;
 		this.initialX = event.clientX;
-		const container = this.shadowRoot?.querySelector('#container') as HTMLDivElement;
+		const container = this.shadowRoot?.getElementById('container') as HTMLDivElement;
 		this.initialWidth = container.offsetWidth;
-		document.addEventListener('mousemove', this.doDrag);
-		document.addEventListener('mouseup', this.stopDrag);
+
+		// Disable pointer events for the iframe during dragging
+		const iframe = this.shadowRoot?.getElementById('preview') as HTMLIFrameElement;
+		iframe.style.pointerEvents = 'none';
 	}
 
-	private doDrag = (event: MouseEvent) => {
-		const container = this.shadowRoot?.querySelector('#container') as HTMLDivElement;
+	private doDrag(event: MouseEvent) {
+		if (!this.isDragging) return;
+
+		const container = this.shadowRoot?.getElementById('container') as HTMLDivElement;
 		const newWidth = this.initialWidth + (event.clientX - this.initialX);
 		const minWidth = 360;
 		const maxWidth = container.parentElement?.clientWidth || window.innerWidth;
@@ -120,10 +137,13 @@ export default class ComponentPreview extends HTMLElement {
 		if (newWidth > minWidth && newWidth < maxWidth) {
 			container.style.width = `${newWidth}px`;
 		}
-	};
+	}
 
 	private stopDrag = () => {
-		document.removeEventListener('mousemove', this.doDrag);
-		document.removeEventListener('mouseup', this.stopDrag);
+		this.isDragging = false;
+
+		// Re-enable pointer events for the iframe after dragging
+		const iframe = this.shadowRoot?.getElementById('preview') as HTMLIFrameElement;
+		iframe.style.pointerEvents = 'auto';
 	};
 }

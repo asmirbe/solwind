@@ -7,9 +7,9 @@ import { commands, ExtensionContext, window, ViewColumn, Uri, TreeItem, extensio
 import SnippetsDataProvider from "./providers/SnippetsDataProvider";
 import HTMLCompletionProvider from "./providers/HTMLCompletionProvider";
 import { pb, createSubcategory, CustomAuthStore, getTailwindConfig } from "./pocketbase/pocketbase";
-import { getWebviewContent } from "./ui/getWebviewContent";
 import { promptForCategory, promptForSubcategory, renamePrompt } from "./utilities/prompts";
 import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
+import { loadWebviewContent } from "./utilities/loadWebviewContent";
 import { setApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
 import { Snippet } from "./types/Snippet";
@@ -68,6 +68,7 @@ export async function activate(context: ExtensionContext) {
 async function initializeExtension(context: ExtensionContext, authStore: CustomAuthStore) {
 	const snippetsDataProvider = new SnippetsDataProvider();
 	const panelMap = new Map<string, WebviewPanel>();
+	await authStore.setData();
 
 	const treeView = window.createTreeView("solwind.snippets", {
 		treeDataProvider: snippetsDataProvider,
@@ -195,7 +196,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				panelMap.delete(snippet.id);
 			});
 
-			await loadWebviewContent(panel, snippet);
+			await loadWebviewContent(panel, snippet.id, snippetsDataProvider, authStore);
 		}
 
 		// Ensure the icon path is set correctly
@@ -205,59 +206,6 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			console.error("Failed to set icon path:", error);
 		}
 	});
-
-	async function loadWebviewContent(panel: WebviewPanel, snippet: Snippet) {
-		try {
-			const webviewContent = await getWebviewContent(
-				panel.webview,
-				context.extensionUri,
-				snippet,
-				snippetsDataProvider.categories,
-				snippetsDataProvider.subcategories
-			);
-
-			panel.webview.html = webviewContent;
-
-			const messageHandler = async (message: any) => {
-				const command = message.command;
-				const snippet = message.snippet;
-
-				switch (command) {
-					case "updateSnippet":
-						if (!snippet.id) break;
-						console.log('before update', snippet);
-						try {
-							await pb.collection("snippets").update(snippet.id, snippet);
-							snippetsDataProvider.refresh();
-							if (panel) {
-								panel.title = snippet.name;
-								panel.webview.html = await getWebviewContent(
-									panel.webview,
-									context.extensionUri,
-									snippet,
-									snippetsDataProvider.categories,
-									snippetsDataProvider.subcategories
-								);
-							}
-							window.showInformationMessage("Snippet updated successfully!");
-						} catch (error) {
-							console.error("Failed to update snippet:", error);
-						}
-						break;
-					case "cancel":
-						panel.dispose();
-						break;
-				}
-			};
-
-			panel.webview.onDidReceiveMessage(messageHandler);
-
-			panel.onDidDispose(() => {});
-		} catch (error) {
-			console.error("Failed to load webview content:", error);
-		}
-	}
-
 
 	const deleteSnippet = commands.registerCommand(
 		"solwind.deleteSnippet",

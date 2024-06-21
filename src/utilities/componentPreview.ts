@@ -11,13 +11,16 @@ export const componentPreview = (fileContent: string, tailwindConfig: string) =>
 			${tailwindConfig}
 		</script>
 		<style type="text/css">
-		::-webkit-scrollbar {
-			width: 0px;
-			height: 0px;
-		}
+			::-webkit-scrollbar {
+				width: 0px;
+				height: 0px;
+			}
+			html {
+				background-color: white;
+			}
 		</style>
 	</head>
-	<body class="bg-white p-8">
+	<body class="p-8">
 		<div>
 			${fileContent}
 		</div>

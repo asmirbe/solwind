@@ -1,14 +1,37 @@
 @import "../../node_modules/@vscode/codicons/dist/codicon.css";
 @import "theme";
+
 *,
 *::before,
 *::after {
    box-sizing: border-box;
 }
+
 #webview-body {
-   display: flex;
-   flex-direction: column;
+   padding: 1rem 8rem 0 8rem;
+   max-width: 1024px;
+   margin: 0 auto;
 }
+
+#nav {
+   position: sticky;
+   bottom: 0;
+   padding: 1rem 0;
+   width: 100%;
+   background: var(--background);
+   border-top: 1px solid var(--dropdown-border);
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   span {
+      display: block;
+      color: var(--foreground);
+      font-size: var(--type-ramp-base-font-size);
+      line-height: var(--type-ramp-base-line-height);
+      margin-bottom: 2px;
+   }
+}
+
 // mixin generate spacing class mt = margin-top, mb = margin-bottom, ml = margin-left, mr = margin-right from 0 with 0.25rem increment to 10rem
 @mixin generate-spacing-class($direction, $property) {
    @for $i from 0 through 10 {
@@ -17,6 +40,7 @@
       }
    }
 }
+
 // generate spacing class
 @include generate-spacing-class(mt, margin-top);
 @include generate-spacing-class(mb, margin-bottom);
@@ -30,11 +54,6 @@
    grid-row-gap: 1rem;
 }
 
-#submit-button,
-#delete-button {
-   width: fit-content;
-}
-
 @media screen and (min-width: 1024px) {
    #webview-body {
       padding: 0 8rem;
@@ -46,28 +65,27 @@ p {
    margin: 0;
    font-size: 13px;
    line-height: 1.3;
-   small {
-      display: flex;
-      align-items: center;
-   }
 }
+
 span.tag {
    font-size: inherit;
-   padding: 2px 4px;
+   padding: 2px 6px;
    border-radius: 4px;
    color: var(--input-foreground);
-   min-width: var(--input-min-width);
    background: var(--input-background);
 }
+
 .field {
    display: flex;
    flex-direction: column;
    gap: 6px;
 }
+
 .inline-container {
    display: flex;
    gap: 1rem;
 }
+
 .grid--2 {
    display: grid;
    gap: 1rem;
@@ -83,19 +101,21 @@ span.tag {
 
    vscode-dropdown {
       width: 100%;
+      background: var(--input-background);
 
       option {
          font-size: var(--type-ramp-base-font-size);
          line-height: var(--type-ramp-base-line-height);
          min-height: 100%;
          padding: 2px 6px 2px 8px;
-
+         background: var(--input-background);
          &:hover {
-            background-color: rgba(255, 255, 255, 0.15);
+            background-color: rgba(52, 52, 52, 0.5);
          }
       }
    }
 }
+
 label {
    display: block;
    color: var(--foreground);
