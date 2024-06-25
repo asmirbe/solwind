@@ -1,9 +1,10 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 import { baseHTML } from "./utilities/baseHTML";
 
-import { commands, ExtensionContext, window, ViewColumn, Uri, TreeItem, extensions, WebviewPanel } from "vscode";
+import type { ExtensionContext, WebviewPanel, TreeItem  } from "vscode";
+import { commands, window, ViewColumn, Uri, extensions} from "vscode";
 import SnippetsDataProvider from "./providers/SnippetsDataProvider";
 import HTMLCompletionProvider from "./providers/HTMLCompletionProvider";
 import { pb, createSubcategory, CustomAuthStore, getTailwindConfig } from "./pocketbase/pocketbase";
@@ -12,7 +13,7 @@ import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
 import { loadWebviewContent } from "./utilities/loadWebviewContent";
 import { setApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
-import { Snippet } from "./types/Snippet";
+import type { Snippet } from "./types/Snippet";
 
 export async function activate(context: ExtensionContext) {
 	// Get actual extension version
@@ -217,11 +218,11 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 					"No"
 				);
 				if (deleteSnippet === "No" || !deleteSnippet || deleteSnippet === undefined) return;
-				await pb.collection("snippets").delete(item.id!);
-				window.showInformationMessage(`Successfully deleted!`);
+				if(item.id) return;
+				await pb.collection("snippets").delete(item.id);
+				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
-
-				const panel = panelMap.get(item.id!);
+				const panel = panelMap.get(item.id);
 				panel?.dispose();
 			} catch (error) {
 				console.error("Error deleting snippet:", error);
@@ -237,7 +238,6 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				const response = await pb.collection("templates").getFullList({
 					sort: "-created",
 				});
-				console.log(response);
 
 				const templates: any[] = response || [];
 				const templateNames = templates.map((template) => template.name);
@@ -335,7 +335,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				if (deleteSubcategory === "No" || !deleteSubcategory || deleteSubcategory === undefined)
 					return;
 				await pb.collection("subcategories").delete(item.id!);
-				window.showInformationMessage(`Successfully deleted!`);
+				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 			} catch (error) {
 				console.error("Error deleting subcategory:", error);
@@ -440,7 +440,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				);
 				if (deleteCategory === "No" || !deleteCategory || deleteCategory === undefined) return;
 				await pb.collection("categories").delete(item.id!);
-				window.showInformationMessage(`Successfully deleted!`);
+				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 			} catch (error) {
 				console.error("Error deleting category:", error);
