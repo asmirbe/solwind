@@ -218,11 +218,10 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 					"No"
 				);
 				if (deleteSnippet === "No" || !deleteSnippet || deleteSnippet === undefined) return;
-				if(item.id) return;
-				await pb.collection("snippets").delete(item.id);
+				await pb.collection("snippets").delete(item.id!);
 				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
-				const panel = panelMap.get(item.id);
+				const panel = panelMap.get(item.id!);
 				panel?.dispose();
 			} catch (error) {
 				console.error("Error deleting snippet:", error);
