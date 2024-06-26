@@ -1,0 +1,11 @@
+{
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": false,
+			"complexity": {
+				"useFlatMap": "error"
+			}
+		}
+	}
+}

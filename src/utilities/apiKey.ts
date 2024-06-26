@@ -7,14 +7,16 @@ export async function setApiKey(): Promise<Event<void>> {
 	const context = getGlobalContext();
 	const apiKeyUpdatedEmitter = new EventEmitter<void>();
 
+	if (!context) {
+		throw new Error("Global context is not available.");
+	}
+
 	const command = commands.registerCommand("solwind.setApiKey", async () => {
 		const input = await window.showInputBox({
 			prompt: "Enter your PocketBase API Key",
 			placeHolder: "API Key",
 		});
-		if (!input) {
-			return;
-		}
+		if (!input) return;
 		try {
 			const authStore = new CustomAuthStore();
 			await authStore.login(input);
@@ -22,9 +24,9 @@ export async function setApiKey(): Promise<Event<void>> {
 			const expiry = authStore.getExpiry(); // Get the expiry from the auth store
 
 			if (token && expiry) {
-				context!.globalState.update("solwind.apiKey", input);
-				context!.globalState.update("solwind.apiToken", token);
-				context!.globalState.update("solwind.apiTokenExpiry", expiry);
+				await context.globalState.update("solwind.apiKey", input);
+				await context.globalState.update("solwind.apiToken", token);
+				await context.globalState.update("solwind.apiTokenExpiry", expiry);
 				window.showInformationMessage("API Key is valid. You are now authenticated.");
 				apiKeyUpdatedEmitter.fire();
 
@@ -39,7 +41,7 @@ export async function setApiKey(): Promise<Event<void>> {
 		}
 	});
 
-	context!.subscriptions.push(command);
+	context.subscriptions.push(command);
 	return apiKeyUpdatedEmitter.event;
 }
 
