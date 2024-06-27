@@ -25,9 +25,12 @@ import CodeIcon from "./components/CodeIcon";
 import CodePreview from "./components/CodePreview";
 import ComponentPreview from "./components/ComponentPreview";
 
+// Define CodeIcon first
 customElements.define('code-icon', CodeIcon);
-customElements.define('component-preview', ComponentPreview);
+
+// Then define other components
 customElements.define('code-preview', CodePreview);
+customElements.define('component-preview', ComponentPreview);
 
 const vscode = acquireVsCodeApi();
 

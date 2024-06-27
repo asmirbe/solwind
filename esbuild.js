@@ -58,6 +58,13 @@ const webviewConfig = {
             to: ["./out"],
          },
       }),
+		copy({
+			resolveFrom: "cwd",
+			assets: {
+				from: "./src/codicon/*",
+				to: "./out/codicon",
+			},
+		})
    ],
 	loader: {
       '.woff': 'file',

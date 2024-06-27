@@ -1,53 +1,53 @@
-import { getHighlighter, Highlighter } from 'shiki';
+import {getHighlighter, Highlighter} from "shiki";
 
 class CodePreview extends HTMLElement {
-	private code: string | null = null;
-	private highlighter: Highlighter | null = null;
+   private code: string | null = null;
+   private highlighter: Highlighter | null = null;
 
-	constructor() {
-		super();
-		this.attachShadow({ mode: 'open' });
-	}
+   constructor() {
+      super();
+      this.attachShadow({mode: "open"});
+   }
 
-	static get observedAttributes() {
-		return ['code'];
-	}
+   static get observedAttributes() {
+      return ["code"];
+   }
 
-	attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-		if (name === 'code' && oldValue !== newValue) {
-			this.code = newValue;
-			this.render();
-		}
-	}
+   attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+      if (name === "code" && oldValue !== newValue) {
+         this.code = newValue;
+         this.render();
+      }
+   }
 
-	connectedCallback() {
-		this.render();
-	}
+   connectedCallback() {
+      this.render();
+   }
 
-	private async getSingletonHighlighter(): Promise<Highlighter> {
-		if (!this.highlighter) {
-			this.highlighter = await getHighlighter({
-				themes: ['aurora-x'],
-				langs: ['javascript', 'html'],
-			});
-		}
-		return this.highlighter;
-	}
+   private async getSingletonHighlighter(): Promise<Highlighter> {
+      if (!this.highlighter) {
+         this.highlighter = await getHighlighter({
+            themes: ["aurora-x"],
+            langs: ["javascript", "html"],
+         });
+      }
+      return this.highlighter;
+   }
 
-	private async renderCodeToHtml(code: string) {
-		const highlighter = await this.getSingletonHighlighter();
-		return highlighter.codeToHtml(code, {
-			theme: 'aurora-x',
-			lang: 'html',
-		});
-	}
+   private async renderCodeToHtml(code: string) {
+      const highlighter = await this.getSingletonHighlighter();
+      return highlighter.codeToHtml(code, {
+         theme: "aurora-x",
+         lang: "html",
+      });
+   }
 
-	private async render() {
-		if (!this.shadowRoot || !this.code) return;
+   private async render() {
+      if (!this.shadowRoot || !this.code) return;
 
-		const highlightedCodeHtml = await this.renderCodeToHtml(this.code);
+      const highlightedCodeHtml = await this.renderCodeToHtml(this.code);
 
-		this.shadowRoot.innerHTML = `
+      this.shadowRoot.innerHTML = `
       <style>
         pre.shiki {
           position: relative;
@@ -98,32 +98,51 @@ class CodePreview extends HTMLElement {
 			 font-size: var(--type-ramp-base-font-size);
 			 line-height: var(--type-ramp-base-line-height);
 			 margin-bottom: 2px;
-		 }
+			 }
+			 header {
+				display: flex;
+				justify-content: space-between;
+				margin-bottom: 4px;
+				align-items: center;
+			}
+				.group {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				}
       </style>
       <div id="code">
-        <label>Code</label>
+		<header>
+		<label>Code</label>
+		<div class="group">
+		<vscode-button appearance="icon" id="copy"><code-icon icon="copy"></code-icon></vscode-button>
+		<vscode-button appearance="icon" id="max"><svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 32 32">
+    <path fill="currentColor" d="M20 2v2h6.586L18 12.582L19.414 14L28 5.414V12h2V2H20zm-6 17.416L12.592 18L4 26.586V20H2v10h10v-2H5.414L14 19.416z"/>
+</svg></vscode-button>
+</div>
+		</header>
         ${highlightedCodeHtml}
       </div>
     `;
 
-		// Add event listener to the <pre> element for double-click
-		this.addToggleHeightEventListener();
-	}
+      // Add event listener to the <pre> element for double-click
+      this.addToggleHeightEventListener();
+   }
 
-	private addToggleHeightEventListener() {
-		const codeContainer = this.shadowRoot?.getElementById('code');
-		if (!codeContainer) return;
+   private addToggleHeightEventListener() {
+      const maxBtn = this.shadowRoot?.getElementById("max");
+      const codeContainer = this.shadowRoot?.getElementById("code");
+      if (!codeContainer || !maxBtn) return;
 
-		codeContainer.addEventListener('dblclick', (event) => {
-			const target = event.target as HTMLElement;
-			const pre = target.closest('pre');
+      maxBtn.addEventListener("click", (event) => {
+         const pre = codeContainer.querySelector("pre.shiki") as HTMLElement | null;
 
-			if (pre) {
-				pre.style.maxHeight = pre.style.maxHeight === 'min-content' ? '20vh' : 'min-content';
-				pre.style.height = 'min-content';
-			}
-		});
-	}
+         if (pre) {
+            pre.style.maxHeight = pre.style.maxHeight === "min-content" ? "20vh" : "min-content";
+            pre.style.height = "min-content";
+         }
+      });
+   }
 }
 
 export default CodePreview;
