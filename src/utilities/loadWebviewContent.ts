@@ -1,11 +1,11 @@
-import {WebviewPanel, window,} from "vscode";
+import {WebviewPanel, window} from "vscode";
 import { getGlobalContext } from "../context/globalContext";
 import { getWebviewContent } from "../ui/getWebviewContent";
 import {type CustomAuthStore} from "../pocketbase/pocketbase";
-import type SnippetsDataProvider from "../providers/SnippetsDataProvider";
 import { pb } from "../pocketbase/pocketbase";
+import type { DataCategories } from "../types/Category";
 
-export async function loadWebviewContent(panel: WebviewPanel, id: string, snippetsDataProvider: SnippetsDataProvider, authStore: CustomAuthStore) {
+export async function loadWebviewContent(panel: WebviewPanel, id: string, dataCategories: DataCategories, authStore: CustomAuthStore, refresh: () => Promise<void>) {
 	const context = getGlobalContext();
 	try {
 		const snippet = await pb.collection("snippets").getOne(id);
@@ -14,8 +14,8 @@ export async function loadWebviewContent(panel: WebviewPanel, id: string, snippe
 			panel.webview,
 			context!.extensionUri,
 			snippet,
-			snippetsDataProvider.categories,
-			snippetsDataProvider.subcategories,
+			dataCategories.categories,
+			dataCategories.subcategories,
 			authStore.getData()
 		);
 
@@ -31,15 +31,15 @@ export async function loadWebviewContent(panel: WebviewPanel, id: string, snippe
 					try {
 						if(!snippet.category || !snippet.subcategory) return window.showErrorMessage("Please select a category and subcategory.");
 						await pb.collection("snippets").update(snippet.id, snippet);
-						snippetsDataProvider.refresh();
+						refresh();
 						if (panel) {
 							panel.title = snippet.name;
 							panel.webview.html = await getWebviewContent(
 								panel.webview,
 								context!.extensionUri,
 								snippet,
-								snippetsDataProvider.categories,
-								snippetsDataProvider.subcategories,
+								dataCategories.categories,
+								dataCategories.subcategories,
 								authStore.getData()
 							);
 						}

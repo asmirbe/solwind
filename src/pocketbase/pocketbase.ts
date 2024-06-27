@@ -1,8 +1,9 @@
-import { window, commands } from "vscode";
+import { window, commands, extensions } from "vscode";
 import type SnippetsDataProvider from "../providers/SnippetsDataProvider"; // Adjust the import path accordingly
 const PocketBase = require("pocketbase/cjs");
 import { Category, Subcategory } from "../types/Category";
 import { getGlobalContext } from "../context/globalContext";
+import { setContext } from "../utilities/setContext";
 
 export const pb = new PocketBase("https://solwind.up.railway.app/", {
 	requestTimeout: 30000,
@@ -37,7 +38,17 @@ export class CustomAuthStore {
 		}
 	}
 
-	public clear() {
+	async getVersion() {
+		// Get actual extension version
+		const currentExtensionVersion = extensions.getExtension("asmirbe.solwind")?.packageJSON.version;
+		const nextExtensionVersion = await pb
+			.collection("version")
+			.getOne("yr0aiacmjhc5jz0", { fields: "version" });
+		const newVer = currentExtensionVersion !== nextExtensionVersion.version;
+		return { newVer, nextExtensionVersion };
+	}
+
+	public async clear() {
 		this.token = null;
 		this.expiry = null;
 		const context = getGlobalContext();
@@ -47,7 +58,7 @@ export class CustomAuthStore {
 			context.globalState.update("solwind.apiKey", undefined);
 
 			// Update the context key
-			commands.executeCommand("setContext", "solwind.apiKeySet", false);
+			await setContext(false);
 			// Finally, reload the window
 			const reload = window.showInformationMessage(
 				"API Key has been deleted. You are now unauthenticated.",

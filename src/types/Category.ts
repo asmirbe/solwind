@@ -8,3 +8,8 @@ export interface Subcategory {
    name: string;
    category: string; // Assuming subcategories have a reference to a category
 }
+
+export interface DataCategories {
+	categories: any[];
+	subcategories: any[];
+}

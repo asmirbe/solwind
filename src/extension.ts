@@ -3,8 +3,8 @@ import * as path from "node:path";
 
 import { baseHTML } from "./utilities/baseHTML";
 
-import type { ExtensionContext, WebviewPanel, TreeItem  } from "vscode";
-import { commands, window, ViewColumn, Uri, extensions} from "vscode";
+import type { ExtensionContext, WebviewPanel, TreeItem } from "vscode";
+import { commands, window, ViewColumn, Uri } from "vscode";
 import SnippetsDataProvider from "./providers/SnippetsDataProvider";
 import HTMLCompletionProvider from "./providers/HTMLCompletionProvider";
 import { pb, createSubcategory, CustomAuthStore, getTailwindConfig } from "./pocketbase/pocketbase";
@@ -14,49 +14,47 @@ import { loadWebviewContent } from "./utilities/loadWebviewContent";
 import { setApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
 import type { Snippet } from "./types/Snippet";
+import type { DataCategories } from "./types/Category";
+
+import { setContext } from "./utilities/setContext";
 
 export async function activate(context: ExtensionContext) {
-	// Get actual extension version
-	const currentExtensionVersion = extensions.getExtension("asmirbe.solwind")?.packageJSON.version;
-	const nextExtensionVersion = await pb
-		.collection("version")
-		.getOne("yr0aiacmjhc5jz0", { fields: "version" });
+	setGlobalContext(context);
+	const authStore = new CustomAuthStore();
+	const apiKey = authStore.getApiKey();
 
-	if (currentExtensionVersion !== nextExtensionVersion.version) {
+	const { newVer, nextExtensionVersion } = await authStore.getVersion();
+	if (newVer) {
 		window.showInformationMessage(
 			`New Solwind version available: v${nextExtensionVersion.version}`
 		);
 	}
 
-	setGlobalContext(context);
-	const authStore = new CustomAuthStore();
-	const contextApiKey = context.globalState.get("solwind.apiKey");
-	const apiKey = authStore.getApiKey();
 	const setApiKeyAndInitialize = async () => {
 		const apiKeyEvent = await setApiKey();
-		apiKeyEvent(() => {
-			commands.executeCommand("setContext", "solwind.apiKeySet", true);
+		apiKeyEvent(async() => {
+			await setContext(true);
 			initializeExtension(context, authStore);
 		});
 	};
 
 	const handleTokenRefreshError = async (error: any) => {
 		console.error("Token refresh failed during extension activation:", error);
-		await commands.executeCommand("setContext", "solwind.apiKeySet", false);
+		await setContext(false);
 		await setApiKeyAndInitialize();
 	};
 
 	if (!apiKey) {
-		await commands.executeCommand("setContext", "solwind.apiKeySet", false);
+		await setContext(false);
 		await setApiKeyAndInitialize();
 	} else {
 		try {
 			await authStore.refresh(); // Refresh the token with the existing API key
 			if (authStore.isValid()) {
-				await commands.executeCommand("setContext", "solwind.apiKeySet", true);
+				await setContext(true);
 				initializeExtension(context, authStore);
 			} else {
-				await commands.executeCommand("setContext", "solwind.apiKeySet", false);
+				await setContext(false);
 				await setApiKeyAndInitialize();
 			}
 		} catch (error) {
@@ -197,7 +195,12 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				panelMap.delete(snippet.id);
 			});
 
-			await loadWebviewContent(panel, snippet.id, snippetsDataProvider, authStore);
+			const data: DataCategories = {
+				categories: snippetsDataProvider.categories,
+				subcategories: snippetsDataProvider.subcategories
+			};
+			const refreshFunction = () => snippetsDataProvider.refresh();
+			await loadWebviewContent(panel, snippet.id, data, authStore, refreshFunction);
 		}
 
 		// Ensure the icon path is set correctly
