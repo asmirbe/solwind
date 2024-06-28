@@ -29,9 +29,6 @@ export async function setApiKey(): Promise<Event<void>> {
 				await context.globalState.update("solwind.apiTokenExpiry", expiry);
 				window.showInformationMessage("API Key is valid. You are now authenticated.");
 				apiKeyUpdatedEmitter.fire();
-
-				// Update the context key
-				await setContext(true);
 			} else {
 				window.showErrorMessage("Authentication failed. Please check your API Key.");
 			}

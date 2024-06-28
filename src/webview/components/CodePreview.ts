@@ -115,11 +115,11 @@ class CodePreview extends HTMLElement {
 		<header>
 		<label>Code</label>
 		<div class="group">
-		<vscode-button appearance="icon" id="copy"><code-icon icon="copy"></code-icon></vscode-button>
+		<!-- <vscode-button appearance="icon" id="copy"><code-icon icon="copy"></code-icon></vscode-button> -->
 		<vscode-button appearance="icon" id="max"><svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 32 32">
-    <path fill="currentColor" d="M20 2v2h6.586L18 12.582L19.414 14L28 5.414V12h2V2H20zm-6 17.416L12.592 18L4 26.586V20H2v10h10v-2H5.414L14 19.416z"/>
-</svg></vscode-button>
-</div>
+			<path fill="currentColor" d="M20 2v2h6.586L18 12.582L19.414 14L28 5.414V12h2V2H20zm-6 17.416L12.592 18L4 26.586V20H2v10h10v-2H5.414L14 19.416z"/>
+		</svg></vscode-button>
+		</div>
 		</header>
         ${highlightedCodeHtml}
       </div>

@@ -86,6 +86,7 @@ export async function getWebviewContent(
                          <vscode-dropdown id="subcategory" position="above"></vscode-dropdown>
                     </div>
               </div>
+				  </section>
               <div id="nav">
 				  		<span>${snippet.name}</span>
 						<div class="inline-container">
@@ -93,7 +94,6 @@ export async function getWebviewContent(
 								<vscode-button id="cancel-button" appearance="secondary">Cancel</vscode-button>
 						</div>
 				  </div>
-         </section>
          <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
     </body>
 </html>`;

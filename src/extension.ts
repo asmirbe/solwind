@@ -15,7 +15,6 @@ import { setApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
 import type { Snippet } from "./types/Snippet";
 import type { DataCategories } from "./types/Category";
-
 import { setContext } from "./utilities/setContext";
 
 export async function activate(context: ExtensionContext) {
@@ -33,28 +32,23 @@ export async function activate(context: ExtensionContext) {
 	const setApiKeyAndInitialize = async () => {
 		const apiKeyEvent = await setApiKey();
 		apiKeyEvent(async() => {
-			await setContext(true);
 			initializeExtension(context, authStore);
 		});
 	};
 
 	const handleTokenRefreshError = async (error: any) => {
 		console.error("Token refresh failed during extension activation:", error);
-		await setContext(false);
 		await setApiKeyAndInitialize();
 	};
 
 	if (!apiKey) {
-		await setContext(false);
 		await setApiKeyAndInitialize();
 	} else {
 		try {
 			await authStore.refresh(); // Refresh the token with the existing API key
 			if (authStore.isValid()) {
-				await setContext(true);
 				initializeExtension(context, authStore);
 			} else {
-				await setContext(false);
 				await setApiKeyAndInitialize();
 			}
 		} catch (error) {
@@ -74,6 +68,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		showCollapseAll: false,
 	});
 
+	await setContext(true);
 	await snippetsDataProvider.refresh();
 
 	const createSnippet = commands.registerCommand("solwind.createSnippet", async () => {
