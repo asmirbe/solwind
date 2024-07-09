@@ -33,7 +33,7 @@ class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
 	private categories: CategoryData[] = [];
 	private isLoading: boolean = false;
 
-	constructor(private apiUrl: string, private apiKey: string) { }
+	constructor(private apiUrl: string, private token: string) { }
 
 	getTreeItem(element: TreeItem): TreeItem {
 		return element;
@@ -127,12 +127,14 @@ class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
 	private async fetchCategories(): Promise<void> {
 		try {
 			const response = await axios.get(this.apiUrl, {
-				headers: { Authorization: `Bearer ${this.apiKey}` }
+				headers: { Authorization: `Bearer ${this.token}` }
 			});
+			console.log("🚀 ~ SnippetsDataProvider ~ fetchCategories ~ response:", response);
 			this.categories = response.data;
 			this._onDidChangeTreeData.fire(undefined);
 		} catch (error) {
 			console.error('Error fetching categories:', error);
+			throw new Error("error");
 			// You might want to show an error message to the user here
 		}
 	}

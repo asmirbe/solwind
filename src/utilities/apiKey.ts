@@ -17,23 +17,14 @@ export async function setApiKey(): Promise<Event<void>> {
 			placeHolder: "API Key",
 		});
 		if (!input) return;
-		try {
-			const authStore = new CustomAuthStore();
-			await authStore.login(input);
-			const token = authStore.getToken();
-			const expiry = authStore.getExpiry(); // Get the expiry from the auth store
 
-			if (token && expiry) {
-				await context.globalState.update("solwind.apiKey", input);
-				await context.globalState.update("solwind.apiToken", token);
-				await context.globalState.update("solwind.apiTokenExpiry", expiry);
-				window.showInformationMessage("API Key is valid. You are now authenticated.");
-				apiKeyUpdatedEmitter.fire();
-			} else {
-				window.showErrorMessage("Authentication failed. Please check your API Key.");
-			}
-		} catch (error) {
-			console.error("Authentication failed:", error);
+		const authStore = new CustomAuthStore();
+		const success = await authStore.login(input);
+
+		if (success) {
+			window.showInformationMessage("API Key is valid. You are now authenticated.");
+			apiKeyUpdatedEmitter.fire();
+		} else {
 			window.showErrorMessage("Authentication failed. Please check your API Key.");
 		}
 	});
@@ -42,10 +33,7 @@ export async function setApiKey(): Promise<Event<void>> {
 	return apiKeyUpdatedEmitter.event;
 }
 
-export async function deleteApiKey(auth: CustomAuthStore): Promise<void> {
-	try {
-		auth.clear();
-	} catch (error) {
-		console.error("Failed to delete API key:", error);
-	}
+export async function deleteApiKey(): Promise<void> {
+	const authStore = new CustomAuthStore();
+	await authStore.clear();
 }

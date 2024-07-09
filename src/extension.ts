@@ -20,57 +20,65 @@ import { setContext } from "./utilities/setContext";
 export async function activate(context: ExtensionContext) {
 	setGlobalContext(context);
 	const authStore = new CustomAuthStore();
-	const apiKey = authStore.getApiKey();
 
 	const { newVer, nextExtensionVersion } = await authStore.getVersion();
 	if (newVer) {
 		window.showInformationMessage(
-			`New Solwind version available: v${nextExtensionVersion.version}`
+			`New Solwind version available: v${nextExtensionVersion}`
 		);
 	}
 
 	const setApiKeyAndInitialize = async () => {
 		const apiKeyEvent = await setApiKey();
-		apiKeyEvent(async() => {
-			initializeExtension(context, authStore);
+		apiKeyEvent(async () => {
+			await initializeExtension(context, authStore);
 		});
 	};
 
-	const handleTokenRefreshError = async (error: any) => {
-		console.error("Token refresh failed during extension activation:", error);
-		await setApiKeyAndInitialize();
-	};
+	const token = authStore.getToken();
 
-	if (!apiKey) {
+	if (!token) {
 		await setApiKeyAndInitialize();
 	} else {
 		try {
-			await authStore.refresh(); // Refresh the token with the existing API key
-			if (authStore.isValid()) {
-				initializeExtension(context, authStore);
+			// Attempt to validate the existing token
+			const isValid = await validateExistingToken(authStore);
+			if (isValid) {
+				await initializeExtension(context, authStore);
 			} else {
 				await setApiKeyAndInitialize();
 			}
 		} catch (error) {
-			await handleTokenRefreshError(error);
+			console.error("Error during token validation:", error);
+			await setApiKeyAndInitialize();
 		}
+	}
+}
+
+
+async function validateExistingToken(authStore: CustomAuthStore): Promise<boolean> {
+	try {
+		// You'll need to implement this method in your CustomAuthStore
+		// It should make a request to your server to validate the token
+		const isValid = await authStore.validateToken();
+		return isValid;
+	} catch (error) {
+		console.error("Token validation failed:", error);
+		return false;
 	}
 }
 
 // Extension init
 async function initializeExtension(context: ExtensionContext, authStore: CustomAuthStore) {
-	const apiKey = context.globalState.get<string>("solwind.apiKey");
-	const snippetsDataProvider = new SnippetsDataProvider(
-		'http://localhost:3000/api/categories',
-		apiKey!
-	);
+	const token = authStore.getToken();
+	const snippetsDataProvider = new SnippetsDataProvider('http://localhost:3000/api/categories', token!);
 	const panelMap = new Map<string, WebviewPanel>();
 	await authStore.setData();
 	await snippetsDataProvider.init();
 
 	const treeView = window.createTreeView("solwind.snippets", {
 		treeDataProvider: snippetsDataProvider,
-		// showCollapseAll: false,
+		showCollapseAll: false,
 	});
 
 	await snippetsDataProvider.refresh();
@@ -337,6 +345,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				if (deleteSubcategory === "No" || !deleteSubcategory || deleteSubcategory === undefined)
 					return;
 				await pb.collection("subcategories").delete(item.id!);
+				// await axios.delete()
 				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 			} catch (error) {
