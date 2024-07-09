@@ -2,7 +2,7 @@ import { CustomAuthStore } from "../pocketbase/pocketbase";
 import { commands, window, EventEmitter } from "vscode";
 import type { Event } from "vscode";
 import { getGlobalContext } from "../context/globalContext";
-import { setContext } from "./setContext";
+
 export async function setApiKey(): Promise<Event<void>> {
 	const context = getGlobalContext();
 	const apiKeyUpdatedEmitter = new EventEmitter<void>();

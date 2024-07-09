@@ -102,8 +102,7 @@
 		"viewsWelcome": [
 			{
 				"view": "solwind.snippets",
-				"contents": "Welcome to the Solwind extension! To get started, you need to set your API key.\n\n[Set API Key](command:solwind.setApiKey \"Setting the API key is mandatory\")\n\nOnce the API key is set, you will have access to all the features of this extension.",
-				"when": "!solwind.apiKeySet"
+				"contents": "Welcome to the Solwind extension! To get started, you need to set your API key.\n\n[Set API Key](command:solwind.setApiKey \"Setting the API key is mandatory\")\n\nOnce the API key is set, you will have access to all the features of this extension."
 			}
 		],
 		"viewsContainers": {
@@ -210,6 +209,7 @@
 	},
 	"dependencies": {
 		"@vscode/codicons": "^0.0.36",
+		"axios": "^1.7.2",
 		"node-html-parser": "^6.1.13",
 		"pocketbase": "^0.21.3",
 		"shiki": "^1.7.0"

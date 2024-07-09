@@ -213,7 +213,7 @@ export async function retrieveSnippets(
 		const categories: Category[] = categoriesResponse.items || [];
 		const subcategories: Subcategory[] = subcategoriesResponse.items || [];
 
-		snippetsDataProvider.setSnippets(snippets, categories, subcategories);
+		// snippetsDataProvider.setSnippets(snippets, categories, subcategories);
 	} catch (error) {
 		console.error("Error fetching snippets and categories:", error);
 		window.showErrorMessage("Failed to fetch snippets and categories from the database.");

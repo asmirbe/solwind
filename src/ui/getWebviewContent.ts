@@ -58,10 +58,14 @@ export async function getWebviewContent(
     </head>
     <body id="webview-body">
          <section id="snippets-form">
+				<header><h1>${snippet.name}</h1><p>${snippet.description && snippet.description.length && snippet.description
+		}</p></header>
             <div class="grid--2">
-                      <vscode-text-field id="name" value="${snippet.name}" placeholder="Enter a name">Name</vscode-text-field>
+                      <vscode-text-field id="name" value="${snippet.name
+		}" placeholder="Enter a name">Name</vscode-text-field>
               <div class="field">
-                    <vscode-text-field id="label" value="${snippet.label}" placeholder="Enter a label">Label</vscode-text-field>
+                    <vscode-text-field id="label" value="${snippet.label
+		}" placeholder="Enter a label">Label</vscode-text-field>
               </div>
             </div>
             <p>
@@ -72,7 +76,8 @@ export async function getWebviewContent(
                     this will run the completion.
                 </small>
                 </p>
-              <vscode-text-area id="description" value="${snippet.description || ''}" placeholder="Write your documentation here" resize="none" rows="2">Documentation</vscode-text-area>
+              <vscode-text-area id="description" value="${snippet.description || ""
+		}" placeholder="Write your documentation here" resize="none" rows="2">Documentation</vscode-text-area>
               <code-preview code="${escapeHtml(code)}"></code-preview>
               <component-preview src="${previewHtml}"></component-preview>
               </div>
@@ -87,13 +92,15 @@ export async function getWebviewContent(
                     </div>
               </div>
 				  </section>
+				  </div>
               <div id="nav">
-				  		<span>${snippet.name}</span>
+				  		<div class="content">
+						<span>${snippet.name}</span>
 						<div class="inline-container">
 								<vscode-button id="submit-button">Save</vscode-button>
 								<vscode-button id="cancel-button" appearance="secondary">Cancel</vscode-button>
 						</div>
-				  </div>
+						</div>
          <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
     </body>
 </html>`;

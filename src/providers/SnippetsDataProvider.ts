@@ -1,158 +1,146 @@
 import {
-   Event,
-   EventEmitter,
-   ThemeIcon,
-   TreeDataProvider,
-   TreeItem,
-   Uri,
-   TreeItemCollapsibleState,
+	Event,
+	EventEmitter,
+	ThemeIcon,
+	TreeDataProvider,
+	TreeItem,
+	Uri,
+	TreeItemCollapsibleState,
 } from "vscode";
-import {retrieveSnippets} from "../pocketbase/pocketbase"; // Adjust the import path as necessary
-import {Category, Subcategory} from "../types/Category";
-import {Snippet} from "../types/Snippet";
-import {capitalizeFirstLetter} from "../utilities/stringUtils";
+import axios from "axios";
+import { capitalizeFirstLetter } from "../utilities/stringUtils";
+
+interface SnippetData {
+	id: number;
+	name: string;
+	label: string;
+	description: string | null;
+}
+
+interface CategoryData {
+	id: number;
+	name: string;
+	parent_id: number | null;
+	children: (CategoryData | SnippetData)[];
+}
 
 class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
-   public snippets: Snippet[] = [];
-   public categories: Category[] = [];
-   public subcategories: Subcategory[] = [];
-   private isLoading: boolean = false;
+	private _onDidChangeTreeData: EventEmitter<undefined | void> = new EventEmitter<
+		undefined | void
+	>();
+	readonly onDidChangeTreeData: Event<undefined | void> = this._onDidChangeTreeData.event;
 
-   private _onDidChangeTreeData: EventEmitter<undefined | void> = new EventEmitter<
-      undefined | void
-   >();
-   readonly onDidChangeTreeData: Event<undefined | void> = this._onDidChangeTreeData.event;
+	private categories: CategoryData[] = [];
+	private isLoading: boolean = false;
 
-   getTreeItem(element: TreeItem): TreeItem {
-      return element;
-   }
+	constructor(private apiUrl: string, private apiKey: string) { }
 
-   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
-      if (!element) {
-         // Root level: show categories
-         return this.categories.map((category) => {
-            const snippetsCount = this.snippets.filter(
-               (snippet) => snippet.category === category.id
-            ).length;
-            const treeItem = new TreeItem(
-               capitalizeFirstLetter(category.name),
-               TreeItemCollapsibleState.Collapsed
-            );
-            treeItem.contextValue = "category";
-            treeItem.id = category.id;
-            treeItem.description = `${snippetsCount} items`;
-            treeItem.iconPath = new ThemeIcon("folder");
-            return treeItem;
-         });
-      }
+	getTreeItem(element: TreeItem): TreeItem {
+		return element;
+	}
 
-      switch (element.contextValue) {
-         case "category": {
-            // Category level: show subcategories and direct snippets
-            const subcategories = this.subcategories.filter(
-               (subcat) => subcat.category === element.id
-            );
-            const subcategoryItems = subcategories.map((subcategory) => {
-               const snippetsCount = this.snippets.filter(
-                  (snippet) => snippet.subcategory === subcategory.id
-               ).length;
-               const treeItem = new TreeItem(
-                  capitalizeFirstLetter(subcategory.name),
-                  TreeItemCollapsibleState.Collapsed
-               );
-               treeItem.contextValue = "subcategory";
-               treeItem.id = subcategory.id;
-               treeItem.description = `${snippetsCount} items`;
-               treeItem.iconPath = new ThemeIcon("folder");
-               return treeItem;
-            });
+	async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+		if (!element) {
+			return this.categories.map(category => this.createCategoryTreeItem(category));
+		}
 
-            // Snippets directly under this category
-            const directSnippets = this.snippets.filter(
-               (snippet) => snippet.category === element.id && !snippet.subcategory
-            );
-            const snippetItems = directSnippets.map((snippet) => {
-               const treeItem = new TreeItem(
-                  capitalizeFirstLetter(snippet.name),
-                  TreeItemCollapsibleState.None
-               );
-               treeItem.contextValue = "snippet";
-               treeItem.id = snippet.id;
-               treeItem.description = snippet.label;
-               treeItem.tooltip = snippet.label;
-               treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
-               treeItem.command = {
-                  title: "Open snippet",
-                  command: "solwind.openSnippet",
-                  arguments: [snippet], // Pass the snippet as an argument to the command
-               };
-               return treeItem;
-            });
+		const item = element.id ? this.findItemById(Number(element.id)) : null;
+		if (item && 'children' in item) {
+			return item.children.map(child =>
+				'children' in child
+					? this.createCategoryTreeItem(child as CategoryData)
+					: this.createSnippetTreeItem(child as SnippetData)
+			);
+		}
 
-            return [...subcategoryItems, ...snippetItems];
-         }
-         case "subcategory": {
-            // Subcategory level: show snippets
-            const snippets = this.snippets.filter((snippet) => snippet.subcategory === element.id);
-            return snippets.map((snippet) => {
-               const treeItem = new TreeItem(
-                  capitalizeFirstLetter(snippet.name),
-                  TreeItemCollapsibleState.None
-               );
-               treeItem.contextValue = "snippet";
-               treeItem.id = snippet.id;
-               treeItem.description = snippet.label;
-               treeItem.tooltip = snippet.label;
-               treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
-               treeItem.command = {
-                  title: "Open snippet",
-                  command: "solwind.openSnippet",
-                  arguments: [snippet], // Pass the snippet as an argument to the command
-               };
-               return treeItem;
-            });
-         }
-         default:
-            return [];
-      }
-   }
+		return [];
+	}
 
-   async refresh(): Promise<void> {
-      if (this.isLoading) {
-         return; // Prevent multiple refresh calls if already loading
-      }
-      this.setLoading(true);
+	private createCategoryTreeItem(category: CategoryData): TreeItem {
+		const treeItem = new TreeItem(
+			capitalizeFirstLetter(category.name),
+			TreeItemCollapsibleState.Collapsed
+		);
+		treeItem.contextValue = "category";
+		treeItem.id = category.id.toString();
+		treeItem.description = `${category.children.length} items`;
+		treeItem.iconPath = new ThemeIcon("folder");
+		return treeItem;
+	}
 
-      try {
-         await retrieveSnippets(this);
-      } finally {
-         this.setLoading(false);
-      }
-      this._onDidChangeTreeData.fire(undefined);
-   }
+	private createSnippetTreeItem(snippet: SnippetData): TreeItem {
+		const treeItem = new TreeItem(
+			capitalizeFirstLetter(snippet.name),
+			TreeItemCollapsibleState.None
+		);
+		treeItem.contextValue = "snippet";
+		treeItem.id = snippet.id.toString();
+		treeItem.description = snippet.label;
+		treeItem.tooltip = snippet.description || snippet.label;
+		treeItem.resourceUri = Uri.file(`${snippet.name}.html`);
+		treeItem.command = {
+			title: "Open snippet",
+			command: "solwind.openSnippet",
+			arguments: [snippet],
+		};
+		return treeItem;
+	}
 
-   setSnippets(snippets: Snippet[], categories: Category[], subcategories: Subcategory[]): void {
-      this.snippets = snippets;
-      this.categories = categories;
-      this.subcategories = subcategories;
-      this._onDidChangeTreeData.fire(undefined);
-   }
+	private findItemById(id: number): CategoryData | SnippetData | undefined {
+		const findInCategory = (category: CategoryData): CategoryData | SnippetData | undefined => {
+			if (category.id === id) return category;
+			for (const child of category.children) {
+				if ('children' in child) {
+					const found = findInCategory(child as CategoryData);
+					if (found) return found;
+				} else if (child.id === id) {
+					return child;
+				}
+			}
+			return undefined;
+		};
 
-   private setLoading(loading: boolean): void {
-      this.isLoading = loading;
-   }
+		for (const category of this.categories) {
+			const found = findInCategory(category);
+			if (found) return found;
+		}
+		return undefined;
+	}
 
-   dispose(): void {
-      // Clear commands from all TreeItems
-      this.snippets.forEach((snippet) => {
-         snippet.command = undefined;
-      });
+	async init(): Promise<void> {
+		await this.fetchCategories();
+	}
 
-      this.snippets = [];
-      this.categories = [];
-      this.subcategories = [];
-      this._onDidChangeTreeData.fire(undefined);
-   }
+	async refresh(): Promise<void> {
+		if (this.isLoading) {
+			return; // Prevent multiple refresh calls if already loading
+		}
+		this.isLoading = true;
+
+		try {
+			await this.fetchCategories();
+		} finally {
+			this.isLoading = false;
+		}
+	}
+
+	private async fetchCategories(): Promise<void> {
+		try {
+			const response = await axios.get(this.apiUrl, {
+				headers: { Authorization: `Bearer ${this.apiKey}` }
+			});
+			this.categories = response.data;
+			this._onDidChangeTreeData.fire(undefined);
+		} catch (error) {
+			console.error('Error fetching categories:', error);
+			// You might want to show an error message to the user here
+		}
+	}
+
+	dispose(): void {
+		this.categories = [];
+		this._onDidChangeTreeData.fire(undefined);
+	}
 }
 
 export default SnippetsDataProvider;

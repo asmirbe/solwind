@@ -79,7 +79,7 @@ class CodePreview extends HTMLElement {
         pre.shiki code span::selection {
           background: #666666;
         }
-        pre.shiki code .line:not(:last-child)::before {
+        pre.shiki code .line::before {
           content: counter(step);
           counter-increment: step;
           width: 1rem;
