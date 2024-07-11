@@ -10,6 +10,50 @@ export const pb = new PocketBase("https://solwind.up.railway.app/", {
 	requestTimeout: 30000,
 });
 
+function isPositiveInteger(x: string) {
+	// http://stackoverflow.com/a/1019526/11236
+	return /^\d+$/.test(x);
+}
+
+function compareVersionNumbers(v1: string, v2: string) {
+	const v1parts = v1.split('.');
+	const v2parts = v2.split('.');
+
+	// First, validate both numbers are true version numbers
+	function validateParts(parts: any) {
+		for (let i = 0; i < parts.length; ++i) {
+			if (!isPositiveInteger(parts[i])) {
+				return false;
+			}
+		}
+		return true;
+	}
+	if (!validateParts(v1parts) || !validateParts(v2parts)) {
+		return NaN;
+	}
+
+	for (let i = 0; i < v1parts.length; ++i) {
+		if (v2parts.length === i) {
+			return 1;
+		}
+
+		if (v1parts[i] === v2parts[i]) {
+			continue;
+		}
+		if (v1parts[i] > v2parts[i]) {
+			return 1;
+		}
+		return -1;
+	}
+
+	if (v1parts.length != v2parts.length) {
+		return -1;
+	}
+
+	return 0;
+}
+
+
 export class CustomAuthStore {
 	private token: string | null = null;
 
@@ -33,12 +77,14 @@ export class CustomAuthStore {
 		}
 	}
 
+
 	async getVersion() {
 		const currentExtensionVersion = extensions.getExtension("asmirbe.solwind")?.packageJSON.version;
 		try {
 			const response = await axios.get('http://localhost:3000/api/version');
 			const nextExtensionVersion = response.data.version;
-			const newVer = currentExtensionVersion !== nextExtensionVersion;
+			const newVer = compareVersionNumbers(nextExtensionVersion, currentExtensionVersion);
+			console.log("🚀 ~ CustomAuthStore ~ getVersion ~ newVer:", newVer);
 			return { newVer, nextExtensionVersion };
 		} catch (error) {
 			console.error("Failed to fetch version:", error);
@@ -144,17 +190,18 @@ export function fetchMatchingSnippets(term: string) {
 	});
 }
 
-export async function createSubcategory(categoryId: string, name: string) {
+export async function createSubcategory(parentId: string, name: string) {
 	const subcategoryData = {
-		category: categoryId,
+		parentId: parseInt(parentId),
 		name: name,
 	};
-	if (!categoryId || !name) {
+	if (!parentId || !name) {
 		window.showErrorMessage("Please provide a category ID and a name.");
 		return;
 	}
 	try {
-		await pb.collection("subcategories").create(subcategoryData);
+		console.log(subcategoryData);
+		await axios.post('categories', subcategoryData);
 	} catch (error) {
 		console.error("Error creating subcategory:", error);
 		window.showErrorMessage("Failed to create subcategory.");

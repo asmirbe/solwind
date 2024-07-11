@@ -11,6 +11,7 @@ html,
 body {
    min-height: 100vh;
    display: flex;
+   flex-direction: column;
 }
 
 header {
@@ -18,10 +19,12 @@ header {
    flex-direction: column;
    gap: 0.325rem;
    padding-top: 1.75rem;
+   padding-bottom: 1rem;
    h1 {
       margin: 0;
    }
 }
+
 #nav {
    position: sticky;
    z-index: 999;
@@ -65,20 +68,23 @@ header {
 
 #snippets-form {
    display: flex;
-   max-width: 1024px;
+   padding: 1rem;
+   max-width: 100%;
    flex-grow: 1;
-   padding: 1rem 8rem 0 8rem;
+   width: 100%;
    margin: 0 auto;
    gap: 1rem;
    margin-bottom: 2rem;
    flex-direction: column;
 }
 
-// @media screen and (min-width: 1024px) {
-// }
-#webview-body {
-   display: block;
+@media screen and (min-width: 1024px) {
+   #snippets-form {
+      padding: 1rem 8rem 0 8rem;
+      max-width: 1024px;
+   }
 }
+
 p {
    margin: 0;
    font-size: 13px;
@@ -141,4 +147,38 @@ label {
    font-size: var(--type-ramp-base-font-size);
    line-height: var(--type-ramp-base-line-height);
    margin-bottom: 2px;
+}
+p.grey {
+   color: rgba(255, 255, 255, 0.5);
+}
+.relative {
+   width: 100%;
+   display: flex;
+   align-items: center;
+   position: relative;
+}
+.chevron {
+   display: flex;
+   pointer-events: none;
+   position: absolute;
+   right: 0.5rem;
+   color: rgba(255, 255, 255, 0.5);
+}
+select.control {
+   align-items: center;
+   box-sizing: border-box;
+   border: calc(var(--border-width) * 1px) solid var(--dropdown-border);
+   border-radius: calc(var(--corner-radius-round) * 1px);
+   background: var(--input-background);
+   appearance: none;
+   cursor: pointer;
+   display: flex;
+   font-family: inherit;
+   color: var(--input-foreground);
+   font-size: var(--type-ramp-base-font-size);
+   line-height: var(--type-ramp-base-line-height);
+   min-height: 100%;
+   padding: 2px 6px 2px 8px;
+   padding-right: 2rem;
+   width: 100%;
 }

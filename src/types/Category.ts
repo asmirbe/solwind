@@ -1,4 +1,5 @@
 export interface Category {
+	children: any;
    id: string;
    name: string;
 }

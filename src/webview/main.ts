@@ -35,137 +35,131 @@ customElements.define('component-preview', ComponentPreview);
 const vscode = acquireVsCodeApi();
 
 class SnippetStore {
-  openedSnippet: Snippet;
-  dataCategories: Category[];
-  dataSubcategories: Subcategory[];
-  isSaving: boolean;
+	openedSnippet: Snippet;
+	dataCategories: Category[];
+	dataSubcategories: Subcategory[];
+	isSaving: boolean;
 
-  constructor() {
-    this.openedSnippet = {
-      id: "",
-      name: "",
-      label: "",
-      description: "",
-      insertText: "",
-      category: "",
-      subcategory: "",
-    };
-    this.dataCategories = [];
-    this.dataSubcategories = [];
-    this.isSaving = false;
-    this.initEventListeners();
-  }
+	constructor() {
+		this.openedSnippet = {
+			id: "",
+			name: "",
+			label: "",
+			description: "",
+			insertText: "",
+			category: "",
+			subcategory: "",
+		};
+		this.dataCategories = [];
+		this.dataSubcategories = [];
+		this.isSaving = false;
+		this.initEventListeners();
+	}
 
-  initEventListeners() {
-    window.addEventListener("message", this.handleMessage.bind(this));
+	initEventListeners() {
+		window.addEventListener("message", this.handleMessage.bind(this));
 
-    const saveButton = document.getElementById("submit-button") as Button;
-    saveButton.addEventListener("click", () => this.saveSnippet());
+		const saveButton = document.getElementById("submit-button") as HTMLButtonElement;
+		saveButton.addEventListener("click", () => this.saveSnippet());
 
-    const cancelButton = document.getElementById("cancel-button") as Button;
-    cancelButton.addEventListener("click", () => {
-      if (!this.isSaving) {
-        vscode.postMessage({ command: "cancel" });
-      }
-    });
-  }
+		const cancelButton = document.getElementById("cancel-button") as HTMLButtonElement;
+		cancelButton.addEventListener("click", () => {
+			if (!this.isSaving) {
+				vscode.postMessage({ command: "cancel" });
+			}
+		});
+	}
 
-  handleMessage(event: MessageEvent) {
-    const command = event.data.command;
+	handleMessage(event: MessageEvent) {
+		const command = event.data.command;
 
-    if (command === "receiveDataInWebview") {
-      const { snippet, categories, subcategories } = JSON.parse(event.data.payload);
-      this.openedSnippet = snippet;
-      this.dataCategories = categories;
-      this.dataSubcategories = subcategories;
-      this.populateDropdowns();
-    }
-  }
+		if (command === "receiveDataInWebview") {
+			const { snippet, categories } = JSON.parse(event.data.payload);
+			this.openedSnippet = snippet;
+			this.dataCategories = categories;
+			this.openedSnippet.category = snippet.category_id;
+			this.openedSnippet.subcategory = snippet.parent_id;
 
-  populateDropdowns() {
-    const categoryDropdown = document.getElementById("category") as HTMLSelectElement;
-    const subcategoryDropdown = document.getElementById("subcategory") as HTMLSelectElement;
+			this.populateDropdown();
+		}
+	}
 
-    categoryDropdown.innerHTML = "";
-    subcategoryDropdown.innerHTML = "";
+	populateDropdown() {
+		// Find the dropdown element in the DOM
+		const dropdown = document.getElementById("categorySubcategory") as HTMLSelectElement;
 
-    this.dataCategories.forEach((category: Category) => {
-      const option = document.createElement("option") as HTMLOptionElement;
-      option.value = category.id;
-      option.textContent = capitalizeFirstLetter(category.name);
-      categoryDropdown.appendChild(option);
-    });
+		// Clear existing options
+		dropdown.innerHTML = '';
 
-    if (this.openedSnippet.category) {
-      categoryDropdown.value = this.openedSnippet.category;
-    }
+		// Iterate over categories to create grouped options
+		this.dataCategories.forEach(category => {
+			// Create an optgroup element for each category
+			const group = document.createElement('optgroup');
+			group.label = category.name;
 
-    this.filterAndPopulateSubcategories(this.openedSnippet.category);
+			// Create an option element for each subcategory under the current category
+			category.children.forEach(subcategory => {
+				const option = document.createElement('option');
+				option.value = `subcategory:${subcategory.id}`;
+				option.text = subcategory.name;
+				group.appendChild(option);
+			});
 
-    categoryDropdown.addEventListener("change", (event) => {
-      const selectedCategoryId = (event.target as HTMLSelectElement).value;
-      this.filterAndPopulateSubcategories(selectedCategoryId);
-    });
-  }
+			// Add the optgroup to the dropdown
+			dropdown.appendChild(group);
+		});
 
-  filterAndPopulateSubcategories(categoryId: string) {
-    const subcategoryDropdown = document.getElementById("subcategory") as HTMLSelectElement;
-    subcategoryDropdown.innerHTML = "";
+		// Add an event listener to handle changes
+		dropdown.addEventListener('change', (event) => {
+			const value = (event.target as HTMLSelectElement).value;
+			const [type, id] = value.split(':');
 
-    const filteredSubcategories = this.dataSubcategories.filter(
-      (subcategory: Subcategory) => subcategory.category === categoryId
-    );
+			if (type === 'subcategory') {
+				// Find the parent category of the subcategory
+				const parentCategory = this.dataCategories.find(category =>
+					category.children.some(sub => sub.id === parseInt(id))
+				);
 
-    if (filteredSubcategories.length === 0) {
-      const option = document.createElement("option") as HTMLOptionElement;
-      option.value = "";
-      option.textContent = "No subcategories";
-      subcategoryDropdown.appendChild(option);
-    } else {
-      filteredSubcategories.forEach((subcategory: Subcategory) => {
-        const option = document.createElement("option") as HTMLOptionElement;
-        option.value = subcategory.id;
-        option.textContent = capitalizeFirstLetter(subcategory.name);
-        subcategoryDropdown.appendChild(option);
-      });
+				this.openedSnippet.category = parentCategory ? parentCategory.id.toString() : '';
+				this.openedSnippet.subcategory = id;
+			}
 
-      if (this.openedSnippet.subcategory) {
-        subcategoryDropdown.value = this.openedSnippet.subcategory;
-      }
-    }
-  }
+			console.log('Updated Category:', this.openedSnippet.category);
+			console.log('Updated Subcategory:', this.openedSnippet.subcategory);
+		});
+	}
 
-  async saveSnippet() {
-    if (this.isSaving) return;
 
-    const nameInput = document.getElementById("name") as TextField;
-    const labelInput = document.getElementById("label") as TextField;
-    const description = document.getElementById("description") as TextArea;
-    const categoryInput = document.getElementById("category") as HTMLSelectElement;
-    const subcategoryInput = document.getElementById("subcategory") as HTMLSelectElement;
 
-    const dataToUpdate = {
-      id: this.openedSnippet.id,
-      name: nameInput?.value,
-      insertText: this.openedSnippet.insertText,
-      label: formatLabel(labelInput?.value),
-      description: description?.value || '',
-      category: categoryInput?.value,
-      subcategory: subcategoryInput?.value,
-    };
+	async saveSnippet() {
+		if (this.isSaving) return;
 
-    this.isSaving = true;
-    await vscode.postMessage({ command: "updateSnippet", snippet: dataToUpdate });
-    this.isSaving = false;
-  }
+		const nameInput = document.getElementById("name") as HTMLInputElement;
+		const labelInput = document.getElementById("label") as HTMLInputElement;
+		const description = document.getElementById("description") as HTMLTextAreaElement;
+		const categorySubcategoryInput = document.getElementById("categorySubcategory") as HTMLSelectElement;
+
+		const [type, id] = categorySubcategoryInput.value.split(':');
+
+		const dataToUpdate = {
+			id: this.openedSnippet.id,
+			name: nameInput?.value,
+			insertText: this.openedSnippet.insertText,
+			label: formatLabel(labelInput?.value),
+			description: description?.value || '',
+			category: type === 'category' ? id : this.openedSnippet.category,
+			subcategory: type === 'subcategory' ? id : '',
+		};
+
+		this.isSaving = true;
+		vscode.postMessage({ command: "updateSnippet", snippet: dataToUpdate });
+		this.isSaving = false;
+	}
 }
 
-// Declare the SnippetStore instance globally
-let snippetStore: SnippetStore;
-
 function main() {
-  vscode.postMessage({ command: "requestSnippetData" });
-  snippetStore = new SnippetStore(); // Initialize the SnippetStore instance
+	vscode.postMessage({ command: "requestSnippetData" });
+	new SnippetStore(); // Initialize the SnippetStore instance
 }
 
 window.addEventListener("load", main);

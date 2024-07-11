@@ -16,17 +16,19 @@ import { setGlobalContext } from "./context/globalContext";
 import type { Snippet } from "./types/Snippet";
 import type { DataCategories } from "./types/Category";
 import { setContext } from "./utilities/setContext";
+import axios from "axios";
+
 
 export async function activate(context: ExtensionContext) {
 	setGlobalContext(context);
 	const authStore = new CustomAuthStore();
 
-	const { newVer, nextExtensionVersion } = await authStore.getVersion();
-	if (newVer) {
-		window.showInformationMessage(
-			`New Solwind version available: v${nextExtensionVersion}`
-		);
-	}
+	// const { newVer, nextExtensionVersion } = await authStore.getVersion();
+	// if (newVer) {
+	// 	window.showInformationMessage(
+	// 		`New Solwind version available: v${nextExtensionVersion}`
+	// 	);
+	// }
 
 	const setApiKeyAndInitialize = async () => {
 		const apiKeyEvent = await setApiKey();
@@ -55,7 +57,6 @@ export async function activate(context: ExtensionContext) {
 	}
 }
 
-
 async function validateExistingToken(authStore: CustomAuthStore): Promise<boolean> {
 	try {
 		// You'll need to implement this method in your CustomAuthStore
@@ -71,7 +72,10 @@ async function validateExistingToken(authStore: CustomAuthStore): Promise<boolea
 // Extension init
 async function initializeExtension(context: ExtensionContext, authStore: CustomAuthStore) {
 	const token = authStore.getToken();
-	const snippetsDataProvider = new SnippetsDataProvider('http://localhost:3000/api/categories', token!);
+	axios.defaults.baseURL = 'http://localhost:3000/api/';
+	axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+	const snippetsDataProvider = new SnippetsDataProvider('http://localhost:3000/api/snippets', token!);
 	const panelMap = new Map<string, WebviewPanel>();
 	await authStore.setData();
 	await snippetsDataProvider.init();
@@ -81,7 +85,6 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		showCollapseAll: false,
 	});
 
-	await snippetsDataProvider.refresh();
 	await setContext(true);
 
 	const createSnippet = commands.registerCommand("solwind.createSnippet", async () => {
@@ -96,19 +99,14 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		}
 
 		try {
-			const [categoriesResponse, subcategoriesResponse] = await Promise.all([
-				pb.collection("categories").getList(1, 100, { sort: "name" }),
-				pb.collection("subcategories").getList(1, 100, { sort: "name", expand: "category" }),
-			]);
+			const response = await axios.get('categories');
+			const { parentCategories, subcategories } = response.data;
 
-			const categories: any[] = categoriesResponse.items || [];
-			const subcategories: any[] = subcategoriesResponse.items || [];
-
-			const selectedCategoryName = await promptForCategory(categories);
+			const selectedCategoryName = await promptForCategory(parentCategories);
 			if (!selectedCategoryName) return;
 
-			const selectedCategory = categories.find(
-				(category) => category.name === selectedCategoryName
+			const selectedCategory = parentCategories.find(
+				(category: any) => category.name === selectedCategoryName
 			);
 
 			const selectedSubcategoryName = await promptForSubcategory(
@@ -119,7 +117,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			if (!selectedSubcategoryName) return;
 
 			const selectedSubcategory = subcategories.find(
-				(subcat) => subcat.name === selectedSubcategoryName
+				(subcat: any) => subcat.name === selectedSubcategoryName && subcat.parent_id === selectedCategory.id
 			);
 
 			if (!selectedSubcategory) {
@@ -169,55 +167,87 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				subcategory: selectedSubcategory.id,
 			};
 
+			try {
+				const res = await axios.post('snippets', snippetData, {
+					headers: { Authorization: `Bearer ${token}` }
+				});
 
-			await pb.collection("snippets").create(snippetData);
-
-			window.showInformationMessage("Snippet created successfully!");
-			await snippetsDataProvider.refresh();
+				await snippetsDataProvider.refresh();
+				window.showInformationMessage("Snippet created successfully!");
+			} catch (error) {
+				if (axios.isAxiosError(error)) {
+					const axiosError = error;
+					if (axiosError.response) {
+						// The request was made and the server responded with a status code
+						// that falls out of the range of 2xx
+						if (axiosError.response.status === 400) {
+							// Bad request - likely a validation error
+							const errorMessage = axiosError.response.data.message || "Invalid input for snippet creation.";
+							window.showErrorMessage(`Failed to create snippet: ${errorMessage}`);
+						} else if (axiosError.response.status === 401) {
+							// Unauthorized
+							window.showErrorMessage("Unauthorized. Please check your authentication token.");
+						} else if (axiosError.response.status === 500) {
+							// Server error
+							window.showErrorMessage("Server error occurred while creating snippet. Please try again later.");
+						} else {
+							// Other status codes
+							window.showErrorMessage(`Failed to create snippet. Server responded with status ${axiosError.response.status}.`);
+						}
+					} else if (axiosError.request) {
+						// The request was made but no response was received
+						window.showErrorMessage("No response received from server. Please check your internet connection.");
+					} else {
+						// Something happened in setting up the request that triggered an Error
+						window.showErrorMessage(`Error setting up the request: ${axiosError.message}`);
+					}
+				} else {
+					// Non-Axios error
+					window.showErrorMessage(`An unexpected error occurred: ${(error as Error).message}`);
+				}
+				console.error("Error creating snippet:", error);
+			}
 		} catch (error) {
-			console.error("Error creating snippet:", error);
-			window.showErrorMessage("Failed to create snippet.");
+			console.error("Error fetching categories:", error);
+			window.showErrorMessage("Failed to fetch categories. Please try again later.");
 		}
 	});
 
-	// const openSnippet = commands.registerCommand("solwind.openSnippet", async (snippet: Snippet) => {
-	// 	let panel = panelMap.get(snippet.id);
+	const openSnippet = commands.registerCommand("solwind.openSnippet", async (snippet: Snippet) => {
+		let panel = panelMap.get(snippet.id);
 
-	// 	if (panel) {
-	// 		panel.reveal(ViewColumn.One);
-	// 	} else {
-	// 		panel = window.createWebviewPanel(
-	// 			"snippetDetailView",
-	// 			snippet.name,
-	// 			ViewColumn.One,
-	// 			{
-	// 				enableScripts: true,
-	// 				localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
-	// 				retainContextWhenHidden: true
-	// 			},
-	// 		);
+		if (panel) {
+			panel.reveal(ViewColumn.One);
+		} else {
+			panel = window.createWebviewPanel(
+				"snippetDetailView",
+				snippet.name,
+				ViewColumn.One,
+				{
+					enableScripts: true,
+					localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
+					retainContextWhenHidden: true
+				},
+			);
 
-	// 		panelMap.set(snippet.id, panel);
+			panelMap.set(snippet.id, panel);
 
-	// 		panel.onDidDispose(() => {
-	// 			panelMap.delete(snippet.id);
-	// 		});
+			panel.onDidDispose(() => {
+				panelMap.delete(snippet.id);
+			});
 
-	// 		const data: DataCategories = {
-	// 			categories: snippetsDataProvider.categories,
-	// 			subcategories: snippetsDataProvider.subcategories
-	// 		};
-	// 		const refreshFunction = () => snippetsDataProvider.refresh();
-	// 		await loadWebviewContent(panel, snippet.id, data, authStore, refreshFunction);
-	// 	}
+			const categories = snippetsDataProvider.categories;
+			const refreshFunction = () => snippetsDataProvider.refresh();
+			await loadWebviewContent(panel, snippet.id, authStore, refreshFunction);
+		}
 
-	// 	// Ensure the icon path is set correctly
-	// 	try {
-	// 		panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
-	// 	} catch (error) {
-	// 		console.error("Failed to set icon path:", error);
-	// 	}
-	// });
+		// Ensure the icon path is set correctly
+		try {
+			panel.iconPath = Uri.joinPath(context.extensionUri, "resources", "logo.svg");
+		} catch (error) {
+			console.error("Failed to set icon path:", error);
+		}
+	});
 
 	const deleteSnippet = commands.registerCommand(
 		"solwind.deleteSnippet",
@@ -257,7 +287,6 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 						const selectedTemplate = templates.find(
 							(template) => template.name === selectedTemplateName
 						);
-						console.log(selectedTemplate);
 
 						if (selectedTemplate) {
 							const fileName = selectedTemplate.name;
@@ -305,9 +334,12 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 	);
 
 	const refreshSnippets = commands.registerCommand("solwind.refreshSnippets", async () => {
-		await snippetsDataProvider.refresh().then(() => {
+		try {
+			await snippetsDataProvider.refresh();
 			window.showInformationMessage("Snippets refreshed successfully!");
-		});
+		} catch (error:any) {
+			window.showErrorMessage(`Failed to refresh snippets: ${error.message}`);
+		}
 	});
 
 	const addSubcategory = commands.registerCommand("solwind.addSubcategory", async (category) => {
@@ -344,7 +376,8 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				);
 				if (deleteSubcategory === "No" || !deleteSubcategory || deleteSubcategory === undefined)
 					return;
-				await pb.collection("subcategories").delete(item.id!);
+				// await pb.collection("subcategories").delete(item.id!);
+				await axios.delete(`subcategories/${item.id}`);
 				// await axios.delete()
 				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
@@ -358,24 +391,17 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 	const renameSubcategory = commands.registerCommand(
 		"solwind.renameSubcategory",
 		async (item: TreeItem) => {
-			let currentLabel: string;
-			if (typeof item.label === "string") {
-				currentLabel = item.label;
-			} else if (item.label && typeof item.label.label === "string") {
-				currentLabel = item.label.label;
-			} else {
-				currentLabel = "default-label";
-			}
+			const currentLabel = typeof item.label === 'string' ? item.label : item.label?.label || '';
 
 			const newName = await renamePrompt({
 				message: "Enter new subcategory name",
 				value: currentLabel,
 			});
-			if (!newName) return;
+			if (!newName || !item.id) return;
 
 			try {
 				const capitalizedNewName = capitalizeFirstLetter(newName);
-				await pb.collection("subcategories").update(item.id!, { name: capitalizedNewName });
+				await axios.put(`subcategories/${item.id}/rename`, { name: capitalizedNewName });
 				window.showInformationMessage(
 					`Subcategory "${currentLabel}" renamed to "${capitalizedNewName}"`
 				);
@@ -400,9 +426,10 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 
 		try {
 			const capitalizedCategoryName = capitalizeFirstLetter(categoryName);
-			await pb.collection("categories").create({ name: capitalizedCategoryName });
+			// await pb.collection("categories").create({ name: capitalizedCategoryName });
+			axios.post('categories', { name: capitalizedCategoryName });
 			window.showInformationMessage(`Category '${capitalizedCategoryName}' added successfully`);
-			snippetsDataProvider.refresh();
+			await snippetsDataProvider.refresh();
 		} catch (error: any) {
 			window.showErrorMessage(`Error: ${error.message}`);
 		}
@@ -428,7 +455,8 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 
 			try {
 				const capitalizedNewName = capitalizeFirstLetter(newName);
-				await pb.collection("categories").update(item.id!, { name: capitalizedNewName });
+				// await pb.collection("categories").update(item.id!, { name: capitalizedNewName });
+				await axios.put(`subcategories/${item.id}/rename`, {name: capitalizedNewName});
 				window.showInformationMessage(
 					`Category "${currentLabel}" renamed to "${capitalizedNewName}"`
 				);
@@ -450,7 +478,8 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 					"No"
 				);
 				if (deleteCategory === "No" || !deleteCategory || deleteCategory === undefined) return;
-				await pb.collection("categories").delete(item.id!);
+
+				await axios.delete(`categories/${item.id}`);
 				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 			} catch (error) {
@@ -468,7 +497,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 
 	context.subscriptions.push(
 		treeView,
-		// openSnippet,
+		openSnippet,
 		createSnippet,
 		deleteSnippet,
 		generateTemplate,

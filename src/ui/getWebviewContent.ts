@@ -14,9 +14,8 @@ const getGeneratedPageURL = (html: string, config: any) => {
 export async function getWebviewContent(
 	webview: Webview,
 	extensionUri: Uri,
-	snippet: Snippet,
-	categories: Category[],
-	subcategories: Subcategory[],
+	snippet: any,
+	categories: any[],
 	tailwindConfig?: any,
 ) {
 
@@ -24,10 +23,10 @@ export async function getWebviewContent(
 	const styleUri = getUri(webview, extensionUri, ["out", "style.css"]);
 	const nonce = getNonce();
 
-	let code = snippet.insertText;
-	if (typeof code !== 'string') {
+	let code = String(snippet.insert_text || '<!-- Code here -->');
+	if (code === 'undefined' || code === 'null') {
 		code = '';
-		console.error('Expected a string for snippet.insertText, but got', typeof snippet.insertText);
+		console.warn(`snippet.insert_text was ${snippet.insert_text}, converted to an empty string`);
 	}
 
 	const previewHtml = getGeneratedPageURL(code, tailwindConfig);
@@ -39,9 +38,8 @@ export async function getWebviewContent(
 				webview.postMessage({
 					command: "receiveDataInWebview",
 					payload: JSON.stringify({
-						snippet: snippet,
-						categories: categories,
-						subcategories: subcategories,
+						snippet,
+						categories
 					}),
 				});
 				break;
@@ -58,39 +56,27 @@ export async function getWebviewContent(
     </head>
     <body id="webview-body">
          <section id="snippets-form">
-				<header><h1>${snippet.name}</h1><p>${snippet.description && snippet.description.length && snippet.description
-		}</p></header>
+				<header><h1>${snippet.name}</h1><p class="grey">${snippet.description || "Pas de description."}</p></header>
             <div class="grid--2">
                       <vscode-text-field id="name" value="${snippet.name
 		}" placeholder="Enter a name">Name</vscode-text-field>
               <div class="field">
                     <vscode-text-field id="label" value="${snippet.label
-		}" placeholder="Enter a label">Label</vscode-text-field>
+		}" placeholder="Enter a label">Tab trigger</vscode-text-field>
               </div>
             </div>
-            <p>
-                <small>
-                <code-icon icon="info" space="4px"></code-icon>
-                    The label is the trigger :
-                    <span class="tag">${snippet.label}</span>
-                    this will run the completion.
-                </small>
-                </p>
               <vscode-text-area id="description" value="${snippet.description || ""
 		}" placeholder="Write your documentation here" resize="none" rows="2">Documentation</vscode-text-area>
               <code-preview code="${escapeHtml(code)}"></code-preview>
               <component-preview src="${previewHtml}"></component-preview>
               </div>
-              <div class="grid--2">
-                    <div class="dropdown-container">
-                         <label for="category">Category</label>
-                         <vscode-dropdown id="category" position="above"></vscode-dropdown>
-                    </div>
-                    <div class="dropdown-container">
-                         <label for="subcategory">Subcategory</label>
-                         <vscode-dropdown id="subcategory" position="above"></vscode-dropdown>
-                    </div>
-              </div>
+				  <div class="dropdown-container">
+						<label for="category">Category</label>
+						<div class="relative">
+						<select class="control" id="categorySubcategory" position="above"></select>
+						<div class="chevron"><code-icon icon="chevron-down"></code-icon></div>
+						</div>
+				  </div>
 				  </section>
 				  </div>
               <div id="nav">

@@ -1,21 +1,22 @@
-import {WebviewPanel, window} from "vscode";
+import { WebviewPanel, window } from "vscode";
 import { getGlobalContext } from "../context/globalContext";
 import { getWebviewContent } from "../ui/getWebviewContent";
-import {type CustomAuthStore} from "../pocketbase/pocketbase";
-import { pb } from "../pocketbase/pocketbase";
-import type { DataCategories } from "../types/Category";
+import { CustomAuthStore } from "../pocketbase/pocketbase";
+import axios from "axios";
 
-export async function loadWebviewContent(panel: WebviewPanel, id: string, dataCategories: DataCategories, authStore: CustomAuthStore, refresh: () => Promise<void>) {
+export async function loadWebviewContent(panel: WebviewPanel, id: string, authStore: CustomAuthStore, refresh: () => Promise<void>) {
 	const context = getGlobalContext();
 	try {
-		const snippet = await pb.collection("snippets").getOne(id);
+		const response = await axios.get(`snippets/${id}`);
+		const categoriesReponse = await axios.get('categories');
+		const snippet = response.data;
+		const { categories } = categoriesReponse.data;
 
 		const webviewContent = await getWebviewContent(
 			panel.webview,
 			context!.extensionUri,
 			snippet,
-			dataCategories.categories,
-			dataCategories.subcategories,
+			categories,
 			authStore.getData()
 		);
 
@@ -30,19 +31,18 @@ export async function loadWebviewContent(panel: WebviewPanel, id: string, dataCa
 					if (!snippet.id) break;
 					try {
 						if(!snippet.category || !snippet.subcategory) return window.showErrorMessage("Please select a category and subcategory.");
-						await pb.collection("snippets").update(snippet.id, snippet);
+						await axios.put(`snippets/${snippet.id}`, snippet);
 						refresh();
-						if (panel) {
-							panel.title = snippet.name;
-							panel.webview.html = await getWebviewContent(
-								panel.webview,
-								context!.extensionUri,
-								snippet,
-								dataCategories.categories,
-								dataCategories.subcategories,
-								authStore.getData()
-							);
-						}
+						// if (panel) {
+						// 	panel.title = snippet.name;
+						// 	panel.webview.html = await getWebviewContent(
+						// 		panel.webview,
+						// 		context!.extensionUri,
+						// 		snippet,
+						// 		categories,
+						// 		authStore.getData()
+						// 	);
+						// }
 						window.showInformationMessage("Snippet updated successfully!");
 					} catch (error) {
 						console.error("Failed to update snippet:", error);
@@ -56,7 +56,7 @@ export async function loadWebviewContent(panel: WebviewPanel, id: string, dataCa
 
 		panel.webview.onDidReceiveMessage(messageHandler);
 
-		panel.onDidDispose(() => {});
+		panel.onDidDispose(() => { });
 	} catch (error) {
 		console.error("Failed to load webview content:", error);
 	}

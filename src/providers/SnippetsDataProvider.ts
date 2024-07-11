@@ -30,7 +30,7 @@ class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
 	>();
 	readonly onDidChangeTreeData: Event<undefined | void> = this._onDidChangeTreeData.event;
 
-	private categories: CategoryData[] = [];
+	categories: CategoryData[] = [];
 	private isLoading: boolean = false;
 
 	constructor(private apiUrl: string, private token: string) { }
@@ -61,10 +61,17 @@ class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
 			capitalizeFirstLetter(category.name),
 			TreeItemCollapsibleState.Collapsed
 		);
-		treeItem.contextValue = "category";
 		treeItem.id = category.id.toString();
 		treeItem.description = `${category.children.length} items`;
 		treeItem.iconPath = new ThemeIcon("folder");
+
+		// Set different contextValue based on whether it's a top-level category or subcategory
+		if (category.parent_id === null) {
+			treeItem.contextValue = "category";
+		} else {
+			treeItem.contextValue = "subcategory";
+		}
+
 		return treeItem;
 	}
 
@@ -113,10 +120,10 @@ class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
 
 	async refresh(): Promise<void> {
 		if (this.isLoading) {
-			return; // Prevent multiple refresh calls if already loading
+			throw new Error("Refresh already in progress");
 		}
-		this.isLoading = true;
 
+		this.isLoading = true;
 		try {
 			await this.fetchCategories();
 		} finally {
@@ -129,13 +136,13 @@ class SnippetsDataProvider implements TreeDataProvider<TreeItem> {
 			const response = await axios.get(this.apiUrl, {
 				headers: { Authorization: `Bearer ${this.token}` }
 			});
-			console.log("🚀 ~ SnippetsDataProvider ~ fetchCategories ~ response:", response);
+
 			this.categories = response.data;
-			this._onDidChangeTreeData.fire(undefined);
 		} catch (error) {
 			console.error('Error fetching categories:', error);
-			throw new Error("error");
-			// You might want to show an error message to the user here
+			throw new Error("Failed to fetch categories");
+		} finally {
+			this._onDidChangeTreeData.fire();
 		}
 	}
 

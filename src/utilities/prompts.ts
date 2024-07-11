@@ -7,16 +7,10 @@ export async function promptForCategory(categories: any[]): Promise<string | und
    });
 }
 
-export async function promptForSubcategory(
-   subcategories: any[],
-   categoryId: string
-): Promise<string | undefined> {
-   const subcategoryNames = subcategories
-      .filter((subcat) => subcat.category === categoryId)
-      .map((subcat) => subcat.name);
-   return await window.showQuickPick(subcategoryNames, {
-      placeHolder: "Select a subcategory",
-   });
+export async function promptForSubcategory(subcategories: any[], parentId: number): Promise<string | undefined> {
+	const filteredSubcategories = subcategories.filter(subcat => subcat.parent_id === parentId);
+	const subcategoryNames = filteredSubcategories.map(subcat => subcat.name);
+	return window.showQuickPick(subcategoryNames, { placeHolder: 'Select a subcategory' });
 }
 
 export const renamePrompt = async ({
@@ -26,7 +20,7 @@ export const renamePrompt = async ({
 }: {
    message: string;
    error?: string;
-   value: string;
+   value: string|undefined;
 }) => {
    const result = await window.showInputBox({
       prompt: message,
