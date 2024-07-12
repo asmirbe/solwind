@@ -162,15 +162,13 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			const snippetData: any = {
 				name: snippetName,
 				label: snippetLabel,
-				insertText: selectedText,
+				insert_text: selectedText,
 				category: selectedCategory.id,
 				subcategory: selectedSubcategory.id,
 			};
 
 			try {
-				const res = await axios.post('snippets', snippetData, {
-					headers: { Authorization: `Bearer ${token}` }
-				});
+				await axios.post('snippets', snippetData);
 
 				await snippetsDataProvider.refresh();
 				window.showInformationMessage("Snippet created successfully!");
@@ -259,7 +257,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 					"No"
 				);
 				if (deleteSnippet === "No" || !deleteSnippet || deleteSnippet === undefined) return;
-				await pb.collection("snippets").delete(item.id!);
+				await axios.delete(`snippets/${item.id}`);
 				window.showInformationMessage("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 				const panel = panelMap.get(item.id!);
