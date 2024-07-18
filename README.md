@@ -31,6 +31,13 @@ The Solwind Snippets extension for Visual Studio Code enhances your coding exper
 
 - **HTML Snippet Autocompletion**: Provide completion items for HTML files based on matching snippets. This feature significantly speeds up HTML coding by suggesting relevant snippets as you type.
 
+## Codeicon component
+```HTML
+<code-icon icon="info" space="4px"></code-icon>
+```
+So here icon is the icon name wich can be found on https://microsoft.github.io/vscode-codicons/dist/codicon.html and space is the margin next the icon.
+
+
 ## Usage
 
 To use the commands provided by the Solwind Snippets extension, you can access them through the Command Palette (`Ctrl+Shift+P` on Windows/Linux, `Cmd+Shift+P` on macOS) or via context menus in the Visual Studio Code editor.

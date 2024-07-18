@@ -48,7 +48,8 @@ export async function getWebviewContent(
 		}
 	});
 
-	return /*html*/ `<!DOCTYPE html>
+	return /*html*/ `
+	<!DOCTYPE html>
 <html>
     <head>
          <meta charset="UTF-8" />
@@ -66,7 +67,6 @@ export async function getWebviewContent(
             </div>
             <p>
                 <small>
-                <code-icon icon="info" space="4px"></code-icon>
                     The label is the trigger :
                     <span class="tag">${snippet.label}</span>
                     this will run the completion.
@@ -88,13 +88,16 @@ export async function getWebviewContent(
               </div>
 				  </section>
               <div id="nav">
-				  		<span>${snippet.name}</span>
-						<div class="inline-container">
-								<vscode-button id="submit-button">Save</vscode-button>
-								<vscode-button id="cancel-button" appearance="secondary">Cancel</vscode-button>
+				  		<div class="content">
+							<span>${snippet.name}</span>
+							<div class="inline-container">
+									<vscode-button id="submit-button">Save</vscode-button>
+									<vscode-button id="cancel-button" appearance="secondary">Cancel</vscode-button>
+							</div>
 						</div>
 				  </div>
          <script type="module" nonce="${nonce}" src="${webviewUri}"></script>
     </body>
-</html>`;
+</html>
+`;
 }

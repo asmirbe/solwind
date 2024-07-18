@@ -7,36 +7,37 @@
    box-sizing: border-box;
 }
 
-html, body {
-	min-height: 100vh;
-	display: flex;
-}
-
-#webview-body {
-   padding: 1rem 8rem 0 8rem;
-   max-width: 1024px;
-   margin: 0 auto;
-	display: flex;
-	flex-direction: column;
+html,
+body {
+   min-height: 100vh;
+   display: flex;
+   flex-direction: column;
 }
 
 #nav {
    position: sticky;
-	z-index: 999;
+   z-index: 999;
    bottom: 0;
-   padding: 1rem 0;
+   padding: 0 8rem;
    width: 100%;
    background: var(--background);
-   border-top: 1px solid var(--dropdown-border);
    display: flex;
-   align-items: center;
-   justify-content: space-between;
    span {
       display: block;
       color: var(--foreground);
       font-size: var(--type-ramp-base-font-size);
       line-height: var(--type-ramp-base-line-height);
       margin-bottom: 2px;
+   }
+   .content {
+      max-width: 768px;
+      flex-grow: 1;
+      padding: 1rem 0;
+      border-top: 1px solid var(--dropdown-border);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
    }
 }
 
@@ -57,20 +58,21 @@ html, body {
 
 #snippets-form {
    display: flex;
-   max-width: 1024px;
    flex-direction: column;
    grid-row-gap: 1rem;
-	flex-grow: 1;
-	margin-bottom: 2rem;
+   flex-grow: 1;
+   margin-bottom: 2rem;
+   padding: 1rem 8rem 1rem 8rem;
 }
 
 @media screen and (min-width: 1024px) {
-   #webview-body {
-      padding: 0 8rem;
+   #snippets-form {
+      padding: 1rem 8rem;
       max-width: 1024px;
       margin: 0 auto;
    }
 }
+
 p {
    margin: 0;
    font-size: 13px;

@@ -2,7 +2,8 @@ import { CustomAuthStore } from "../pocketbase/pocketbase";
 import { commands, window, EventEmitter } from "vscode";
 import type { Event } from "vscode";
 import { getGlobalContext } from "../context/globalContext";
-import { setContext } from "./setContext";
+import { showMessageWithTimeout, showErrorMessageWithTimeout } from '../utilities/errorMessage';
+
 export async function setApiKey(): Promise<Event<void>> {
 	const context = getGlobalContext();
 	const apiKeyUpdatedEmitter = new EventEmitter<void>();
@@ -13,28 +14,25 @@ export async function setApiKey(): Promise<Event<void>> {
 
 	const command = commands.registerCommand("solwind.setApiKey", async () => {
 		const input = await window.showInputBox({
-			prompt: "Enter your PocketBase API Key",
+			prompt: "Enter your API Key",
 			placeHolder: "API Key",
 		});
 		if (!input) return;
 		try {
 			const authStore = new CustomAuthStore();
-			await authStore.login(input);
-			const token = authStore.getToken();
-			const expiry = authStore.getExpiry(); // Get the expiry from the auth store
+			const login = await authStore.login(input);
+			console.log("🚀 ~ command ~ login:", login);
 
-			if (token && expiry) {
+			if (login) {
 				await context.globalState.update("solwind.apiKey", input);
-				await context.globalState.update("solwind.apiToken", token);
-				await context.globalState.update("solwind.apiTokenExpiry", expiry);
-				window.showInformationMessage("API Key is valid. You are now authenticated.");
+				showMessageWithTimeout("API Key is valid. You are now authenticated.");
 				apiKeyUpdatedEmitter.fire();
 			} else {
-				window.showErrorMessage("Authentication failed. Please check your API Key.");
+				showErrorMessageWithTimeout("Authentication failed. Please check your API Key.");
 			}
 		} catch (error) {
 			console.error("Authentication failed:", error);
-			window.showErrorMessage("Authentication failed. Please check your API Key.");
+			showErrorMessageWithTimeout("Authentication failed. Please check your API Key.");
 		}
 	});
 

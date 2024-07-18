@@ -53,7 +53,6 @@ class CodePreview extends HTMLElement {
           position: relative;
           z-index: 1;
           margin: 0;
-          background: transparent;
           overflow-x: auto;
           overflow-y: hidden;
           height: min-content;
@@ -79,14 +78,14 @@ class CodePreview extends HTMLElement {
         pre.shiki code span::selection {
           background: #666666;
         }
-        pre.shiki code .line:not(:last-child)::before {
+        pre.shiki code .line:before {
           content: counter(step);
           counter-increment: step;
           width: 1rem;
           margin-right: 1.5rem;
           display: inline-block;
           text-align: right;
-          color: var(--dropdown-border);
+          color: var(--checkbox-border);
         }
         pre.shiki code::selection {
           background: #666666;

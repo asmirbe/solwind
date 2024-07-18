@@ -22,38 +22,24 @@ export async function activate(context: ExtensionContext) {
 	const authStore = new CustomAuthStore();
 	const apiKey = authStore.getApiKey();
 
-	const { newVer, nextExtensionVersion } = await authStore.getVersion();
-	if (newVer) {
-		window.showInformationMessage(
-			`New Solwind version available: v${nextExtensionVersion.version}`
-		);
-	}
+	// const { newVer, nextExtensionVersion } = await authStore.getVersion();
+	// if (newVer) {
+	// 	window.showInformationMessage(
+	// 		`New Solwind version available: v${nextExtensionVersion.version}`
+	// 	);
+	// }
 
 	const setApiKeyAndInitialize = async () => {
 		const apiKeyEvent = await setApiKey();
-		apiKeyEvent(async() => {
+		apiKeyEvent(async () => {
 			initializeExtension(context, authStore);
 		});
-	};
-
-	const handleTokenRefreshError = async (error: any) => {
-		console.error("Token refresh failed during extension activation:", error);
-		await setApiKeyAndInitialize();
 	};
 
 	if (!apiKey) {
 		await setApiKeyAndInitialize();
 	} else {
-		try {
-			await authStore.refresh(); // Refresh the token with the existing API key
-			if (authStore.isValid()) {
-				initializeExtension(context, authStore);
-			} else {
-				await setApiKeyAndInitialize();
-			}
-		} catch (error) {
-			await handleTokenRefreshError(error);
-		}
+		await initializeExtension(context, authStore);
 	}
 }
 
@@ -141,10 +127,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			});
 
 
-			if (!snippetLabel) {
-				window.showErrorMessage("Snippet label is required.");
-				return;
-			}
+			if (!snippetLabel) return;
 
 			snippetLabel = formatLabel(snippetLabel);
 

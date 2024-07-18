@@ -11,22 +11,19 @@ export const pb = new PocketBase("https://solwind.up.railway.app/", {
 
 export class CustomAuthStore {
 	private token: string | null = null;
-	private expiry: number | null = null;
 	private data: any = null;
 
 	constructor() {
 		this.token = this.getToken();
-		this.expiry = this.getExpiry();
 		this.data = this.getData();
 	}
 
-	save(token: string, expiry: number) {
+	save(token: string) {
 		this.token = token;
-		this.expiry = expiry;
 		const context = getGlobalContext();
 		if (context) {
 			context.globalState.update("solwind.apiToken", token);
-			context.globalState.update("solwind.apiTokenExpiry", expiry);
+			return true;
 		}
 	}
 
@@ -50,11 +47,9 @@ export class CustomAuthStore {
 
 	public async clear() {
 		this.token = null;
-		this.expiry = null;
 		const context = getGlobalContext();
 		if (context) {
 			context.globalState.update("solwind.apiToken", undefined);
-			context.globalState.update("solwind.apiTokenExpiry", undefined);
 			context.globalState.update("solwind.apiKey", undefined);
 
 			// Update the context key
@@ -68,11 +63,6 @@ export class CustomAuthStore {
 			if (!reload) return;
 			commands.executeCommand("workbench.action.reloadWindow");
 		}
-	}
-
-	isValid() {
-		if (!this.token || !this.expiry) return false;
-		return Date.now() < this.expiry;
 	}
 
 	getApiKey() {
@@ -91,14 +81,6 @@ export class CustomAuthStore {
 		return null;
 	}
 
-	getExpiry() {
-		const context = getGlobalContext();
-		if (context) {
-			return context.globalState.get<number>("solwind.apiTokenExpiry") ?? null;
-		}
-		return null;
-	}
-
 	getData() {
 		const context = getGlobalContext();
 		if (context) {
@@ -106,33 +88,21 @@ export class CustomAuthStore {
 		}
 	}
 
-	async refresh() {
-		if (this.isValid()) return;
-
-		try {
-			const result = await pb.collection("users").authRefresh();
-			const newExpiry = Date.now() + 63072000; // Adjust duration as needed
-			const updateExpiry = await pb
-				.collection("users")
-				.update(result.record.id, { expiry: newExpiry });
-			this.save(result.token, updateExpiry.expiry);
-		} catch (error) {
-			console.error("Token refresh failed:", error);
-			this.clear();
-		}
-	}
-
 	async login(apiKey: string) {
 		try {
-			const result = await pb.collection("users").authWithPassword("admin", apiKey);
-			const newExpiry = Date.now() + 63072000; // You may need to adjust this based on actual response
-			const updateExpiry = await pb
-				.collection("users")
-				.update(result.record.id, { expiry: newExpiry });
-			this.save(result.token, updateExpiry.expiry);
+			const result = await pb.collection('categories').getList(1, 1, { sort: '-created', headers: { 'x_token': apiKey } });
+			console.log("🚀 ~ CustomAuthStore ~ login ~ result:", result);
+			if (result.totalItems > 0) {
+				console.log("Login successful:", result);
+				this.save(apiKey); // Nous sauvegardons la clé API au lieu d'un token
+				return true;
+			} else {
+				console.log("Invalid API key");
+				return false;
+			}
 		} catch (error) {
 			console.error("Login failed:", error);
-			this.clear();
+			return false;
 		}
 	}
 }
@@ -141,8 +111,8 @@ pb.authStore = new CustomAuthStore();
 
 pb.beforeSend = function (url: any, options: any) {
 	const token = pb.authStore.getToken();
-	if (token && !options.headers["Authorization"]) {
-		options.headers["Authorization"] = token;
+	if (token && !options.headers["x_token"]) {
+		options.headers["x_token"] = token;
 	}
 
 	return { url, options: options };
@@ -197,7 +167,7 @@ export async function retrieveSnippets(
 	message?: string
 ): Promise<void> {
 	try {
-		await pb.authStore.refresh(); // Refresh the token before making the request
+		// await pb.authStore.refresh(); // Refresh the token before making the request
 
 		const [snippetsResponse, categoriesResponse, subcategoriesResponse] = await Promise.all([
 			pb
