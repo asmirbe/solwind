@@ -60,19 +60,12 @@ export async function getWebviewContent(
     <body id="webview-body">
          <section id="snippets-form">
             <div class="grid--2">
-                      <vscode-text-field id="name" value="${snippet.name}" placeholder="Enter a name">Name</vscode-text-field>
+                      <vscode-text-field id="name" value="${snippet.name}" placeholder="Enter a name">Component name</vscode-text-field>
               <div class="field">
-                    <vscode-text-field id="label" value="${snippet.label}" placeholder="Enter a label">Label</vscode-text-field>
+                    <vscode-text-field id="label" value="${snippet.label}" placeholder="Enter a label">Tab trigger</vscode-text-field>
               </div>
             </div>
-            <p>
-                <small>
-                    The label is the trigger :
-                    <span class="tag">${snippet.label}</span>
-                    this will run the completion.
-                </small>
-                </p>
-              <vscode-text-area id="description" value="${snippet.description || ''}" placeholder="Write your documentation here" resize="none" rows="2">Documentation</vscode-text-area>
+              <vscode-text-area id="description" value="${snippet.description || ''}" placeholder="Write your documentation here" resize="none" rows="2">Description</vscode-text-area>
               <code-preview code="${escapeHtml(code)}"></code-preview>
               <component-preview src="${previewHtml}"></component-preview>
               </div>

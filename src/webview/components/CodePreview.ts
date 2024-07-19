@@ -78,15 +78,6 @@ class CodePreview extends HTMLElement {
         pre.shiki code span::selection {
           background: #666666;
         }
-        pre.shiki code .line:before {
-          content: counter(step);
-          counter-increment: step;
-          width: 1rem;
-          margin-right: 1.5rem;
-          display: inline-block;
-          text-align: right;
-          color: var(--checkbox-border);
-        }
         pre.shiki code::selection {
           background: #666666;
         }
@@ -109,6 +100,15 @@ class CodePreview extends HTMLElement {
 				align-items: center;
 				gap: 4px;
 				}
+				        pre.shiki code .line:not(:empty):before {
+          content: counter(step);
+          counter-increment: step;
+          width: 1rem;
+          margin-right: 1.5rem;
+          display: inline-block;
+          text-align: right;
+          color: var(--checkbox-border);
+        }
       </style>
       <div id="code">
 		<header>

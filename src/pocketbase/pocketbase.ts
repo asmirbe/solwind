@@ -5,7 +5,7 @@ import { Category, Subcategory } from "../types/Category";
 import { getGlobalContext } from "../context/globalContext";
 import { setContext } from "../utilities/setContext";
 
-export const pb = new PocketBase("https://solwind.up.railway.app/", {
+export const pb = new PocketBase("http://127.0.0.1:8090/", {
 	requestTimeout: 30000,
 });
 
@@ -40,6 +40,7 @@ export class CustomAuthStore {
 		const currentExtensionVersion = extensions.getExtension("asmirbe.solwind")?.packageJSON.version;
 		const nextExtensionVersion = await pb
 			.collection("version")
+			.getFirstItem
 			.getOne("yr0aiacmjhc5jz0", { fields: "version" });
 		const newVer = currentExtensionVersion !== nextExtensionVersion.version;
 		return { newVer, nextExtensionVersion };
@@ -90,7 +91,8 @@ export class CustomAuthStore {
 
 	async login(apiKey: string) {
 		try {
-			const result = await pb.collection('categories').getList(1, 1, { sort: '-created', headers: { 'x_token': apiKey } });
+			const result = await pb.collection('categories').getList(1, 1, { sort: '-created', headers: { 'X-API-Key': apiKey } });
+
 			console.log("🚀 ~ CustomAuthStore ~ login ~ result:", result);
 			if (result.totalItems > 0) {
 				console.log("Login successful:", result);
@@ -111,8 +113,8 @@ pb.authStore = new CustomAuthStore();
 
 pb.beforeSend = function (url: any, options: any) {
 	const token = pb.authStore.getToken();
-	if (token && !options.headers["x_token"]) {
-		options.headers["x_token"] = token;
+	if (token && !options.headers["X-API-Key"]) {
+		options.headers["X-API-Key"] = token;
 	}
 
 	return { url, options: options };
