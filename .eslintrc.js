@@ -1,22 +1,19 @@
 /**@type {import('eslint').Linter.Config} */
 // eslint-disable-next-line no-undef
 module.exports = {
-	root: true,
-	parser: '@typescript-eslint/parser',
-	plugins: [
-		'@typescript-eslint',
-	],
-	extends: [
-		'eslint:recommended',
-		'plugin:@typescript-eslint/recommended',
-	],
-	rules: {
-		'semi': [2, "always"],
-		"no-mixed-spaces-and-tabs": "off",
-		"@typescript-eslint/no-var-requires": "off",
-		'@typescript-eslint/no-unused-vars': 0,
-		'@typescript-eslint/no-explicit-any': 0,
-		'@typescript-eslint/explicit-module-boundary-types': 0,
-		'@typescript-eslint/no-non-null-assertion': 0,
-	}
+   root: true,
+   parser: "@typescript-eslint/parser",
+   plugins: ["@typescript-eslint"],
+   extends: [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended",
+   ],
+   rules: {
+      "semi": ["error", "always"],
+      "no-unused-vars": "warn",
+      "@typescript-eslint/explicit-function-return-type": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "prettier/prettier": "error",
+   },
 };

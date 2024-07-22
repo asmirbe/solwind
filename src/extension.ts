@@ -16,6 +16,7 @@ import { setGlobalContext } from "./context/globalContext";
 import type { Snippet } from "./types/Snippet";
 import type { DataCategories } from "./types/Category";
 import { setContext } from "./utilities/setContext";
+import { showMessageWithTimeout } from "./utilities/errorMessage";
 
 export async function activate(context: ExtensionContext) {
 	setGlobalContext(context);
@@ -30,10 +31,12 @@ export async function activate(context: ExtensionContext) {
 	// }
 
 	const setApiKeyAndInitialize = async () => {
-		const apiKeyEvent = await setApiKey();
-		apiKeyEvent(async () => {
-			initializeExtension(context, authStore);
-		});
+		try {
+			await setApiKey();
+			await initializeExtension(context, authStore);
+		} catch (error) {
+			console.error('Error setting API key:', error);
+		}
 	};
 
 	if (!apiKey) {
@@ -142,7 +145,8 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 
 			await pb.collection("snippets").create(snippetData);
 
-			window.showInformationMessage("Snippet created successfully!");
+			// window.showInformationMessage("Snippet created successfully!");
+			showMessageWithTimeout("Snippet created successfully!");
 			await snippetsDataProvider.refresh();
 		} catch (error) {
 			console.error("Error creating snippet:", error);
@@ -200,7 +204,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				);
 				if (deleteSnippet === "No" || !deleteSnippet || deleteSnippet === undefined) return;
 				await pb.collection("snippets").delete(item.id!);
-				window.showInformationMessage("Successfully deleted!");
+				showMessageWithTimeout("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 				const panel = panelMap.get(item.id!);
 				panel?.dispose();
@@ -227,7 +231,6 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 						const selectedTemplate = templates.find(
 							(template) => template.name === selectedTemplateName
 						);
-						console.log(selectedTemplate);
 
 						if (selectedTemplate) {
 							const fileName = selectedTemplate.name;
@@ -276,7 +279,8 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 
 	const refreshSnippets = commands.registerCommand("solwind.refreshSnippets", async () => {
 		await snippetsDataProvider.refresh().then(() => {
-			window.showInformationMessage("Snippets refreshed successfully!");
+			// window.showInformationMessage("Snippets refreshed successfully!");
+			showMessageWithTimeout("Snippets refreshed successfully");
 		});
 	});
 
@@ -294,9 +298,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		try {
 			const capitalizedSubcategoryName = capitalizeFirstLetter(subcategoryName);
 			await createSubcategory(category.id, capitalizedSubcategoryName);
-			window.showInformationMessage(
-				`Subcategory '${capitalizedSubcategoryName}' added successfully`
-			);
+			showMessageWithTimeout(`Subcategory '${capitalizedSubcategoryName}' added successfully`);
 			snippetsDataProvider.refresh();
 		} catch (error: any) {
 			window.showErrorMessage(`Failed to add subcategory: ${error.message}`);
@@ -315,7 +317,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				if (deleteSubcategory === "No" || !deleteSubcategory || deleteSubcategory === undefined)
 					return;
 				await pb.collection("subcategories").delete(item.id!);
-				window.showInformationMessage("Successfully deleted!");
+				showMessageWithTimeout("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 			} catch (error) {
 				console.error("Error deleting subcategory:", error);
@@ -345,7 +347,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			try {
 				const capitalizedNewName = capitalizeFirstLetter(newName);
 				await pb.collection("subcategories").update(item.id!, { name: capitalizedNewName });
-				window.showInformationMessage(
+				showMessageWithTimeout(
 					`Subcategory "${currentLabel}" renamed to "${capitalizedNewName}"`
 				);
 				await snippetsDataProvider.refresh();
@@ -370,7 +372,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		try {
 			const capitalizedCategoryName = capitalizeFirstLetter(categoryName);
 			await pb.collection("categories").create({ name: capitalizedCategoryName });
-			window.showInformationMessage(`Category '${capitalizedCategoryName}' added successfully`);
+			showMessageWithTimeout(`Category '${capitalizedCategoryName}' added successfully`);
 			snippetsDataProvider.refresh();
 		} catch (error: any) {
 			window.showErrorMessage(`Error: ${error.message}`);
@@ -398,7 +400,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 			try {
 				const capitalizedNewName = capitalizeFirstLetter(newName);
 				await pb.collection("categories").update(item.id!, { name: capitalizedNewName });
-				window.showInformationMessage(
+				showMessageWithTimeout(
 					`Category "${currentLabel}" renamed to "${capitalizedNewName}"`
 				);
 				await snippetsDataProvider.refresh();
@@ -420,7 +422,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 				);
 				if (deleteCategory === "No" || !deleteCategory || deleteCategory === undefined) return;
 				await pb.collection("categories").delete(item.id!);
-				window.showInformationMessage("Successfully deleted!");
+				showMessageWithTimeout("Successfully deleted!");
 				await snippetsDataProvider.refresh();
 			} catch (error) {
 				console.error("Error deleting category:", error);

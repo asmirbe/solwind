@@ -1,4 +1,4 @@
-import { window, commands, extensions, ProgressLocation, MessageItem } from "vscode";
+import { window,ProgressLocation } from "vscode";
 
 /**
  * Shows a message that auto closes after a certain timeout. Since there's no API for this functionality the
@@ -9,7 +9,7 @@ import { window, commands, extensions, ProgressLocation, MessageItem } from "vsc
  * @param message The message to show.
  * @param timeout The time in milliseconds after which the message should close (default 3secs).
  */
-export const showMessageWithTimeout = (message: string, timeout = 3000): void => {
+export const showMessageWithTimeout = (message: string, timeout = 2000): void => {
 	void window.withProgress(
 		{
 			location: ProgressLocation.Notification,

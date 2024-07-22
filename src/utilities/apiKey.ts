@@ -21,7 +21,6 @@ export async function setApiKey(): Promise<Event<void>> {
 		try {
 			const authStore = new CustomAuthStore();
 			const login = await authStore.login(input);
-			console.log("🚀 ~ command ~ login:", login);
 
 			if (login) {
 				await context.globalState.update("solwind.apiKey", input);

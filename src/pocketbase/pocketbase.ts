@@ -5,7 +5,7 @@ import { Category, Subcategory } from "../types/Category";
 import { getGlobalContext } from "../context/globalContext";
 import { setContext } from "../utilities/setContext";
 
-export const pb = new PocketBase("http://127.0.0.1:8090/", {
+export const pb = new PocketBase("https://pocketbase-production-4bb8.up.railway.app/", {
 	requestTimeout: 30000,
 });
 
@@ -40,7 +40,6 @@ export class CustomAuthStore {
 		const currentExtensionVersion = extensions.getExtension("asmirbe.solwind")?.packageJSON.version;
 		const nextExtensionVersion = await pb
 			.collection("version")
-			.getFirstItem
 			.getOne("yr0aiacmjhc5jz0", { fields: "version" });
 		const newVer = currentExtensionVersion !== nextExtensionVersion.version;
 		return { newVer, nextExtensionVersion };
@@ -57,7 +56,7 @@ export class CustomAuthStore {
 			await setContext(false);
 			// Finally, reload the window
 			const reload = window.showInformationMessage(
-				"API Key has been deleted. You are now unauthenticated.",
+				"You are now unauthenticated. Reload extension ?",
 				"Yes",
 				"No"
 			);
@@ -93,7 +92,6 @@ export class CustomAuthStore {
 		try {
 			const result = await pb.collection('categories').getList(1, 1, { sort: '-created', headers: { 'X-API-Key': apiKey } });
 
-			console.log("🚀 ~ CustomAuthStore ~ login ~ result:", result);
 			if (result.totalItems > 0) {
 				console.log("Login successful:", result);
 				this.save(apiKey); // Nous sauvegardons la clé API au lieu d'un token
@@ -169,8 +167,6 @@ export async function retrieveSnippets(
 	message?: string
 ): Promise<void> {
 	try {
-		// await pb.authStore.refresh(); // Refresh the token before making the request
-
 		const [snippetsResponse, categoriesResponse, subcategoriesResponse] = await Promise.all([
 			pb
 				.collection("snippets")
@@ -189,6 +185,7 @@ export async function retrieveSnippets(
 	} catch (error) {
 		console.error("Error fetching snippets and categories:", error);
 		window.showErrorMessage("Failed to fetch snippets and categories from the database.");
+		pb.authStore.clear();
 	} finally {
 		if (message) {
 			window.showInformationMessage(message);
