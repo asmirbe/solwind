@@ -2,52 +2,55 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { baseHTML } from "./utilities/baseHTML";
-
-import type { ExtensionContext, WebviewPanel, TreeItem } from "vscode";
-import { commands, window, ViewColumn, Uri } from "vscode";
+import type { ExtensionContext, WebviewPanel, TreeItem, Disposable } from "vscode";
+import { EventEmitter, commands, window, ViewColumn, Uri } from "vscode";
 import SnippetsDataProvider from "./providers/SnippetsDataProvider";
 import HTMLCompletionProvider from "./providers/HTMLCompletionProvider";
 import { pb, createSubcategory, CustomAuthStore, getTailwindConfig } from "./pocketbase/pocketbase";
 import { promptForCategory, promptForSubcategory, renamePrompt } from "./utilities/prompts";
 import { capitalizeFirstLetter, formatLabel } from "./utilities/stringUtils";
 import { loadWebviewContent } from "./utilities/loadWebviewContent";
-import { setApiKey } from "./utilities/apiKey";
 import { setGlobalContext } from "./context/globalContext";
 import type { Snippet } from "./types/Snippet";
 import type { DataCategories } from "./types/Category";
 import { setContext } from "./utilities/setContext";
 import { showMessageWithTimeout } from "./utilities/errorMessage";
 
+let extensionDisposables: Disposable[] = [];
+let apiKeyUpdatedEmitter: EventEmitter<void>;
+
 export async function activate(context: ExtensionContext) {
 	setGlobalContext(context);
 	const authStore = new CustomAuthStore();
+
+	// Always register setApiKey command
+	apiKeyUpdatedEmitter = new EventEmitter<void>();
+	const setApiKeyDisposable = commands.registerCommand("solwind.setApiKey", async () => {
+		await handleSetApiKey(context, authStore);
+	});
+	context.subscriptions.push(setApiKeyDisposable);
+
 	const apiKey = authStore.getApiKey();
 
-	// const { newVer, nextExtensionVersion } = await authStore.getVersion();
-	// if (newVer) {
-	// 	window.showInformationMessage(
-	// 		`New Solwind version available: v${nextExtensionVersion.version}`
-	// 	);
-	// }
-
-	const setApiKeyAndInitialize = async () => {
-		try {
-			await setApiKey();
-			await initializeExtension(context, authStore);
-		} catch (error) {
-			console.error('Error setting API key:', error);
-		}
-	};
-
 	if (!apiKey) {
-		await setApiKeyAndInitialize();
+		await promptForApiKey(context, authStore);
 	} else {
-		await initializeExtension(context, authStore);
+		extensionDisposables = await initializeExtension(context, authStore);
 	}
+
+	// Register deleteApiKey command
+	const deleteApiKeyDisposable = commands.registerCommand('solwind.deleteApiKey', () => {
+		disposeExtensionResources();
+		authStore.clear();
+		showMessageWithTimeout('API key deleted. Extension resources disposed.');
+	});
+
+	context.subscriptions.push(deleteApiKeyDisposable);
 }
 
 // Extension init
 async function initializeExtension(context: ExtensionContext, authStore: CustomAuthStore) {
+	const disposables: Disposable[] = [];
 	const snippetsDataProvider = new SnippetsDataProvider();
 	const panelMap = new Map<string, WebviewPanel>();
 	await authStore.setData();
@@ -431,13 +434,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		}
 	);
 
-	const deleteApiKey = commands.registerCommand("solwind.deleteApiKey", async () => {
-		authStore.clear();
-		treeView.dispose();
-		snippetsDataProvider.dispose();
-	});
-
-	context.subscriptions.push(
+	disposables.push(
 		treeView,
 		openSnippet,
 		createSnippet,
@@ -450,7 +447,45 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		addCategory,
 		renameCategory,
 		deleteCategory,
-		HTMLCompletionProvider,
-		deleteApiKey
+		HTMLCompletionProvider
 	);
+
+	return disposables;
+}
+
+async function handleSetApiKey(context: ExtensionContext, authStore: CustomAuthStore) {
+	const input = await window.showInputBox({
+		prompt: "Enter your API Key",
+		placeHolder: "API Key",
+	});
+	if (!input) return;
+	try {
+		const login = await authStore.login(input);
+		if (login) {
+			await context.globalState.update("solwind.apiKey", input);
+			showMessageWithTimeout("API Key is valid. You are now authenticated.");
+			apiKeyUpdatedEmitter.fire();
+			extensionDisposables = await initializeExtension(context, authStore);
+		} else {
+			window.showErrorMessage("Authentication failed. Please check your API Key.");
+		}
+	} catch (error) {
+		console.error("Authentication failed:", error);
+		window.showErrorMessage("Authentication failed. Please check your API Key.");
+	}
+}
+
+async function promptForApiKey(context: ExtensionContext, authStore: CustomAuthStore) {
+	window.showInformationMessage('Please set your API key to use Solwind', 'Set API Key')
+		.then(selection => {
+			if (selection === 'Set API Key') {
+				commands.executeCommand('solwind.setApiKey');
+			}
+		});
+}
+
+function disposeExtensionResources() {
+	extensionDisposables.forEach(disposable => disposable.dispose());
+	extensionDisposables = [];
+	commands.executeCommand('setContext', 'solwind.apiKeySet', false);
 }

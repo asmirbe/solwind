@@ -54,14 +54,6 @@ export class CustomAuthStore {
 
 			// Update the context key
 			await setContext(false);
-			// Finally, reload the window
-			const reload = window.showInformationMessage(
-				"You are now unauthenticated. Reload extension ?",
-				"Yes",
-				"No"
-			);
-			if (!reload) return;
-			commands.executeCommand("workbench.action.reloadWindow");
 		}
 	}
 
