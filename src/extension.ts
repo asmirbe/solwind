@@ -19,6 +19,7 @@ import { showMessageWithTimeout } from "./utilities/errorMessage";
 let extensionDisposables: Disposable[] = [];
 let apiKeyUpdatedEmitter: EventEmitter<void>;
 
+// Activation step
 export async function activate(context: ExtensionContext) {
 	setGlobalContext(context);
 	const authStore = new CustomAuthStore();
@@ -453,6 +454,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 	return disposables;
 }
 
+// Handling API KEY set
 async function handleSetApiKey(context: ExtensionContext, authStore: CustomAuthStore) {
 	const input = await window.showInputBox({
 		prompt: "Enter your API Key",
@@ -475,6 +477,7 @@ async function handleSetApiKey(context: ExtensionContext, authStore: CustomAuthS
 	}
 }
 
+// Asking for API KEY
 async function promptForApiKey(context: ExtensionContext, authStore: CustomAuthStore) {
 	window.showInformationMessage('Please set your API key to use Solwind', 'Set API Key')
 		.then(selection => {
@@ -484,6 +487,7 @@ async function promptForApiKey(context: ExtensionContext, authStore: CustomAuthS
 		});
 }
 
+// Dispose everything and go back as non authed
 function disposeExtensionResources() {
 	extensionDisposables.forEach(disposable => disposable.dispose());
 	extensionDisposables = [];

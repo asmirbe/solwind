@@ -82,7 +82,7 @@ async function watch(config) {
 
 // Function to update the version field in PocketBase
 async function updateVersionInPocketBase(newVersion) {
-   const pb = new PocketBase("https://solwind.up.railway.app");
+   const pb = new PocketBase("solwind.up.railway.app");
 
    try {
       // Authenticate as admin

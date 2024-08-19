@@ -5,7 +5,7 @@ import { Category, Subcategory } from "../types/Category";
 import { getGlobalContext } from "../context/globalContext";
 import { setContext } from "../utilities/setContext";
 
-export const pb = new PocketBase("https://pocketbase-production-4bb8.up.railway.app/", {
+export const pb = new PocketBase("https://solwind.up.railway.app/", {
 	requestTimeout: 30000,
 });
 
@@ -110,13 +110,6 @@ pb.beforeSend = function (url: any, options: any) {
 	return { url, options: options };
 };
 
-async function validateCategoryAndSubcategory(categoryId: string, subcategoryId: string) {
-	// Fetch the subcategory to get its associated category
-	const subcategory = await pb.collection('subcategories').getOne(subcategoryId);
-	if (!subcategory || subcategory.category !== categoryId) {
-		throw new Error('Invalid subcategory for the given category');
-	}
-}
 
 export function fetchMatchingSnippets(term: string) {
 	return new Promise((resolve, reject) => {
