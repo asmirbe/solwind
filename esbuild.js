@@ -89,11 +89,11 @@ async function updateVersionInPocketBase(newVersion) {
       await pb.admins.authWithPassword("admin@admin.com", "zqzksryxiwahwcr");
 
       // Fetch the current version
-      const record = await pb.collection("version").getOne("yr0aiacmjhc5jz0");
+      const record = await pb.collection("version").getOne("g1cds17bv0w4nri");
 
       // Update the collection with the new version
       const data = {version: newVersion};
-      await pb.collection("version").update("yr0aiacmjhc5jz0", data);
+      await pb.collection("version").update("g1cds17bv0w4nri", data);
       console.log("PocketBase version updated successfully");
    } catch (error) {
       console.error("Error updating PocketBase version:", error);
@@ -149,7 +149,7 @@ function incrementVersion(version) {
             const newVersion = incrementVersion(currentVersion);
             console.log("New version to set:", newVersion);
 
-            await updateVersionInPocketBase(newVersion);
+            // await updateVersionInPocketBase(newVersion);
             updatePackageJsonVersion(newVersion);
          }
       }

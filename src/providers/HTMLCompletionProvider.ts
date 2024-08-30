@@ -45,7 +45,7 @@ const HTMLCompletionProvider = languages.registerCompletionItemProvider(
          }
       },
    },
-   "tw-"
+   "sw-"
 );
 
 export default HTMLCompletionProvider;

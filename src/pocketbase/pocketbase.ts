@@ -197,7 +197,7 @@ export async function createSubcategory(categoryId: string, name: string) {
 
 export async function getTailwindConfig() {
 	try {
-		const tailwindConfig = await pb.collection("config").getOne("oi4d8p2kxxrse9d");
+		const tailwindConfig = await pb.collection("config").getOne("xjoehxiqpdsszza");
 		return tailwindConfig.value;
 	} catch (error) {
 		console.error("Error fetching tailwind config:", error);

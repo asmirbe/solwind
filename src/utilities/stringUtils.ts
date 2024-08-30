@@ -3,7 +3,7 @@ export function capitalizeFirstLetter(string: string) {
 }
 
 export function formatLabel(label: string): string {
-   const prefix = "tw-";
+   const prefix = "sw-";
    if (!label.startsWith(prefix)) {
       label = prefix + label;
    }

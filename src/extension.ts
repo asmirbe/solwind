@@ -219,6 +219,11 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 		}
 	);
 
+	function minifyConfig(config:string) {
+		// Remove all whitespace except inside quotes
+		return config.replace(/\s+(?=(?:(?:[^"]*"){2})*[^"]*$)/g, '');
+	}
+
 	const generateTemplate = commands.registerCommand(
 		"solwind.generateTemplate",
 		async (folderUri: Uri) => {
@@ -240,6 +245,8 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 							const fileName = selectedTemplate.name;
 							const fileContent = selectedTemplate.content;
 							const tailwindConfig = await getTailwindConfig();
+							const minifiedConfig = minifyConfig(tailwindConfig);
+							const finalTwConfig = `tailwind.config = {${minifiedConfig}};`;
 
 							const filePath = path.join(folderUri.fsPath, "index.html");
 
@@ -255,7 +262,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 									"No"
 								);
 								if (overwrite === "No" || !overwrite || overwrite === undefined) return;
-								await fs.promises.writeFile(filePath, baseHTML(fileContent, tailwindConfig), {
+								await fs.promises.writeFile(filePath, baseHTML(fileContent, finalTwConfig), {
 									encoding: "utf8",
 									flag: "w",
 								});
@@ -263,7 +270,7 @@ async function initializeExtension(context: ExtensionContext, authStore: CustomA
 									`Template '${fileName}' generated successfully!`
 								);
 							} else {
-								await fs.promises.writeFile(filePath, baseHTML(fileContent, tailwindConfig), {
+								await fs.promises.writeFile(filePath, baseHTML(fileContent, finalTwConfig), {
 									encoding: "utf8",
 									flag: "w",
 								});
